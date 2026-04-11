@@ -87,9 +87,9 @@ router.post('/upload-students', isAdmin, upload.single('file'), async (req, res)
 
     for (const row of data) {
       try {
-        const rollRaw = findVal(row, ['Admissionno', 'Roll Number', 'Roll No', 'RollNo', 'HTNO', 'HT No', 'Student ID']);
-        const nameRaw = findVal(row, ['name', 'Student Name', 'Full Name', 'StudentName']);
-        const emailRaw= findVal(row, ['studentemail', 'Email', 'Email ID', 'Student Email']);
+        const rollRaw = findVal(row, ['Admissionno', 'Roll Number', 'Roll No', 'RollNo', 'HTNO', 'HT No', 'Student ID', 'Admission No', 'Adm No', 'Reg No', 'RegNo', 'Student ID']);
+        const nameRaw = findVal(row, ['name', 'Student Name', 'Full Name', 'StudentName', 'Name of the Student']);
+        const emailRaw= findVal(row, ['studentemail', 'Email', 'Email ID', 'Student Email', 'Mail ID']);
         
         const rollNumber = String(rollRaw || '').trim().toUpperCase();
         if (!rollNumber) continue;
