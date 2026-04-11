@@ -37,8 +37,14 @@ mongoose.connect(MONGO_URI)
   })
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
+// Trust Proxy for Render/Heroku sessions
+app.set('trust proxy', 1);
+
 // Middleware
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ 
+  origin: true, 
+  credentials: true 
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -49,8 +55,15 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'btech_result_secret_key_2024',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: MONGO_URI }),
-  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+  store: MongoStore.create({ 
+    mongoUrl: MONGO_URI,
+    ttl: 14 * 24 * 60 * 60 // 14 days
+  }),
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', 
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000 
+  }
 }));
 
 // Routes
