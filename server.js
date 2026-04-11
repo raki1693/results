@@ -62,7 +62,7 @@ app.use(session({
   saveUninitialized: true, 
   store: MongoStore.create({ 
     mongoUrl: MONGO_URI,
-    collectionName: 'sessions'
+    collectionName: 'app_sessions' // Renamed from 'sessions' to fix duplicate key error
   }),
   cookie: { 
     secure: true, 
