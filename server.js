@@ -27,12 +27,12 @@ mongoose.connect(MONGO_URI)
     const adminCount = await Admin.countDocuments();
     if (adminCount === 0) {
       await Admin.create({ 
-        username: 'admin', 
-        password: process.env.ADMIN_PASSWORD || 'admin123', 
-        name: 'Super Admin',
-        email: 'admin@college.edu'
+        username: 'nandarakeshvepuri800@gmail.com', 
+        password: process.env.ADMIN_PASSWORD || 'Rakesh1127%%', 
+        name: 'Rakesh Admin',
+        email: 'nandarakeshvepuri800@gmail.com'
       });
-      console.log('👤 Admin account ready');
+      console.log('👤 Admin account ready: nandarakeshvepuri800@gmail.com');
     }
   })
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
