@@ -66,7 +66,7 @@ app.use(session({
   }),
   cookie: { 
     secure: process.env.NODE_ENV === 'production', 
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    sameSite: 'lax', // Changed from 'none' to 'lax' for better compatibility
     maxAge: 24 * 60 * 60 * 1000 
   }
 }));
