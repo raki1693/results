@@ -74,7 +74,6 @@ router.post('/upload-students', isAdmin, upload.single('file'), async (req, res)
 
     if (!data.length) return res.status(400).json({ success: false, message: 'Excel file is empty' });
 
-    // 📜 Create History Record First
     const history = new UploadHistory({
       filename: req.file.originalname,
       uploadType: 'Students',
@@ -83,52 +82,56 @@ router.post('/upload-students', isAdmin, upload.single('file'), async (req, res)
     });
     await history.save();
 
-    let created = 0, updated = 0, errors = [];
+    const bulkOps = [];
+    let processed = 0;
 
     for (const row of data) {
-      try {
-        const rollRaw = findVal(row, ['HallTicketNo', 'Admissionno', 'Roll Number', 'Roll No', 'RollNo', 'HTNO', 'HT No', 'Student ID', 'Reg No']);
-        const nameRaw = findVal(row, ['StudentName', 'name', 'Student Name', 'Full Name', 'StudentName', 'Name of the Student']);
-        const emailRaw= findVal(row, ['StudentEmail', 'studentemail', 'Email', 'Email ID', 'Student Email', 'Mail ID']);
-        
-        const rollNumber = String(rollRaw || '').trim().toUpperCase();
-        if (!rollNumber) continue;
+      const rollRaw = findVal(row, ['HallTicketNo', 'Admissionno', 'Roll Number', 'Roll No', 'RollNo', 'HTNO', 'HT No', 'Student ID', 'Reg No']);
+      const rollNumber = String(rollRaw || '').trim().toUpperCase();
+      if (!rollNumber) continue;
 
-        const name      = String(nameRaw || 'Student').trim();
-        const email     = String(emailRaw || '').trim().toLowerCase() || `${rollNumber.toLowerCase()}@college.edu`;
-        const branch    = String(findVal(row, ['BranchName', 'branchname', 'Branch', 'Dept']) || 'CSE').trim();
-        const year      = parseInt(findVal(row, ['Semester', 'batch', 'Year']) || 1);
-        
-        const updateData = {
-          name, 
-          email, 
-          branch, 
-          year,
-          uploadId: history._id,
-          phone: String(findVal(row, ['StudMobile', 'Phone', 'Mobile']) || '').trim(),
-          fatherName: String(findVal(row, ['FatherName', 'Father Name']) || '').trim(),
-          dob: String(findVal(row, ['DateOfBirth', 'DOB']) || '').trim()
-        };
+      const nameRaw = findVal(row, ['StudentName', 'name', 'Student Name', 'Full Name', 'Name of the Student']);
+      const emailRaw= findVal(row, ['StudentEmail', 'studentemail', 'Email', 'Email ID', 'Student Email', 'Mail ID']);
+      
+      const name      = String(nameRaw || 'Student').trim();
+      const email     = String(emailRaw || '').trim().toLowerCase() || `${rollNumber.toLowerCase()}@college.edu`;
+      const branch    = String(findVal(row, ['BranchName', 'branchname', 'Branch', 'Dept']) || 'CSE').trim();
+      const year      = parseInt(findVal(row, ['Semester', 'batch', 'Year']) || 1);
+      
+      const updateData = {
+        name, 
+        email, 
+        branch, 
+        year,
+        uploadId: history._id,
+        phone: String(findVal(row, ['StudMobile', 'Phone', 'Mobile']) || '').trim(),
+        fatherName: String(findVal(row, ['FatherName', 'Father Name']) || '').trim(),
+        dob: String(findVal(row, ['DateOfBirth', 'DOB']) || '').trim(),
+        isActive: true,
+        hasDataAccess: true
+      };
 
-        const existing = await Student.findOne({ rollNumber });
-        if (existing) {
-          Object.assign(existing, updateData);
-          await existing.save();
-          updated++;
-        } else {
-          const student = new Student({ rollNumber, password: rollNumber.toLowerCase(), ...updateData });
-          await student.save();
-          created++;
+      bulkOps.push({
+        updateOne: {
+          filter: { rollNumber },
+          update: { 
+            $set: updateData,
+            $setOnInsert: { password: rollNumber.toLowerCase() } 
+          },
+          upsert: true
         }
-      } catch (e) {
-        errors.push(`Row error: ${e.message}`);
-      }
+      });
+      processed++;
     }
 
-    await UploadHistory.findByIdAndUpdate(history._id, { recordsCount: created + updated, status: 'Success' });
+    if (bulkOps.length > 0) {
+      await Student.bulkWrite(bulkOps);
+    }
+
+    await UploadHistory.findByIdAndUpdate(history._id, { recordsCount: processed, status: 'Success' });
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     
-    res.json({ success: true, message: `Upload Complete!`, details: `${created} New, ${updated} Updated.` });
+    res.json({ success: true, message: `Upload Complete!`, details: `Processed ${processed} students.` });
   } catch (err) {
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     res.status(500).json({ success: false, message: 'Upload failed: ' + err.message });
