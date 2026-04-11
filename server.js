@@ -23,16 +23,21 @@ mongoose.connect(MONGO_URI)
   .then(async () => {
     console.log('✅ MongoDB Connected Successfully');
     // Auto-create default admin
+    // Aggressive Admin Seeding (Always checks for this specific user)
     const Admin = require('./models/Admin');
-    const adminCount = await Admin.countDocuments();
-    if (adminCount === 0) {
+    const targetUser = 'nandarakeshvepuri800@gmail.com';
+    const adminExists = await Admin.findOne({ username: targetUser });
+    
+    if (!adminExists) {
       await Admin.create({ 
-        username: 'nandarakeshvepuri800@gmail.com', 
-        password: process.env.ADMIN_PASSWORD || 'Rakesh1127%%', 
+        username: targetUser, 
+        password: 'Rakesh1127%%', 
         name: 'Rakesh Admin',
-        email: 'nandarakeshvepuri800@gmail.com'
+        email: targetUser
       });
-      console.log('👤 Admin account ready: nandarakeshvepuri800@gmail.com');
+      console.log(`✅ Admin Created: ${targetUser}`);
+    } else {
+      console.log(`ℹ️ Admin confirmed: ${targetUser}`);
     }
   })
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
