@@ -58,15 +58,15 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Session Configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'btech_result_secret_key_2024',
-  resave: false,
-  saveUninitialized: false,
+  resave: true, 
+  saveUninitialized: true, 
   store: MongoStore.create({ 
     mongoUrl: MONGO_URI,
-    ttl: 14 * 24 * 60 * 60 // 14 days
+    collectionName: 'sessions'
   }),
   cookie: { 
-    secure: process.env.NODE_ENV === 'production', 
-    sameSite: 'lax', // Changed from 'none' to 'lax' for better compatibility
+    secure: true, 
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 
   }
 }));
