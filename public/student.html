@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Portal – Kits Result</title>
+  <meta name="description" content="Official Kits Result student portal to check semester academic records securely."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <link rel="stylesheet" href="/css/student.css"/>
+</head>
+<body class="portal-body">
+
+  <div class="bg-particles">
+    <span></span><span></span><span></span><span></span>
+  </div>
+
+  <!-- ══════════════ AUTHENTICATION ══════════════ -->
+  <div id="loginScreen" class="auth-screen">
+    <div class="auth-card">
+      
+      <!-- Login Form View -->
+      <div id="loginView">
+        <div class="auth-header">
+          <a href="/" class="back-link">← Home</a>
+          <div class="auth-logo">🎓</div>
+          <h1>Student Login</h1>
+          <p>Sign in to check your results</p>
+        </div>
+        <form id="loginForm" class="auth-form">
+          <div class="form-group">
+            <label for="rollNumber">Roll Number</label>
+            <input type="text" id="rollNumber" placeholder="e.g. 21CS001" required/>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <input type="password" id="password" placeholder="Enter password" required/>
+              <button type="button" class="toggle-pw" onclick="togglePw('password', this)">👁️</button>
+            </div>
+          </div>
+          <div id="loginError" class="error-msg hidden"></div>
+          <button type="submit" class="btn-submit" id="loginBtn">
+            <span class="btn-text">Sign In</span>
+            <span class="btn-loader hidden">⏳</span>
+          </button>
+        </form>
+        <p class="auth-switch">Don't have an account? <a href="#" onclick="toggleAuth(true)">Register Now</a></p>
+      </div>
+
+      <!-- Registration Form View -->
+      <div id="registerView" class="hidden">
+        <div class="auth-header">
+          <div class="auth-logo">📝</div>
+          <h1>Create Account</h1>
+          <p>Register as a new student</p>
+        </div>
+        <form id="registerForm" class="auth-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Roll Number *</label>
+              <input type="text" id="regRoll" placeholder="e.g. 21CS001" required/>
+            </div>
+            <div class="form-group">
+              <label>Full Name *</label>
+              <input type="text" id="regName" placeholder="Full Name" required/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input type="email" id="regEmail" placeholder="student@college.edu" required/>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Branch *</label>
+              <select id="regBranch" required class="filter-select" style="width: 100%">
+                <option value="">Select Branch</option>
+                <option>CSE</option><option>CSE-AI</option><option>AIML</option><option>CSE-DS</option>
+                <option>ECE</option><option>EEE</option><option>MECH</option><option>CIVIL</option><option>IT</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Year *</label>
+              <select id="regYear" required class="filter-select" style="width: 100%">
+                <option value="">Year</option>
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Create Password *</label>
+            <div class="input-wrap">
+              <input type="password" id="regPass" placeholder="Set password" required/>
+              <button type="button" class="toggle-pw" onclick="togglePw('regPass', this)">👁️</button>
+            </div>
+          </div>
+          <div id="registerMsg" class="error-msg hidden"></div>
+          <button type="submit" class="btn-submit" id="registerBtn">
+            <span class="btn-text">Create Account</span>
+          </button>
+        </form>
+        <p class="auth-switch">Already have an account? <a href="#" onclick="toggleAuth(false)">Log In</a></p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════ DASHBOARD ══════════════ -->
+  <div id="dashboard" class="dashboard hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">🎓</span>
+        <span class="brand-name">Kits Result</span>
+      </div>
+      <div class="student-info-box">
+        <div class="info-avatar" id="sidebarAvatar">A</div>
+        <div class="info-details">
+          <strong id="sidebarName">Student</strong>
+          <span id="sidebarRoll">Roll No.</span>
+          <span id="sidebarBranch">Branch</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="overview" onclick="showSection('overview', this)">
+          <span>📊</span> Overview
+        </a>
+        <a href="#" class="nav-item" data-section="results" onclick="showSection('results', this)">
+          <span>📋</span> My Results
+        </a>
+        <a href="#" class="nav-item" data-section="data" onclick="showSection('data', this)">
+          <span>🗂️</span> DATA
+        </a>
+        <a href="#" class="nav-item" data-section="chat" onclick="showSection('chat', this)">
+          <span>💬</span> Support Chat
+        </a>
+        <a href="#" class="nav-item" data-section="profile" onclick="showSection('profile', this)">
+          <span>👤</span> My Profile
+        </a>
+      </nav>
+      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+      <div class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="topbarTitle">Overview</div>
+        <div id="sessionTimerBox" class="timer-box hidden">
+          <span class="timer-icon">⏳</span>
+          <span id="sessionCountdown">00:00</span>
+        </div>
+        <div class="topbar-right">
+          <span class="greeting" id="topbarGreeting">Welcome!</span>
+        </div>
+      </div>
+
+      <!-- ── Overview Section ── -->
+      <section id="section-overview" class="content-section active">
+        <div class="stats-row" id="overviewStats">
+          <div class="stat-card blue"><div class="stat-num" id="statSemesters">–</div><div class="stat-lbl">Semesters</div></div>
+          <div class="stat-card green"><div class="stat-num" id="statBestSgpa">–</div><div class="stat-lbl">Best SGPA</div></div>
+          <div class="stat-card purple"><div class="stat-num" id="statAvgPct">–</div><div class="stat-lbl">Avg %</div></div>
+          <div class="stat-card orange"><div class="stat-num" id="statStatus">–</div><div class="stat-lbl">Overall</div></div>
+        </div>
+
+        <div class="section-card">
+          <h2 class="card-title">Semester Snapshot</h2>
+          <div id="semesterCards" class="semester-grid">
+            <div class="loading-state">Loading results…</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Results Section ── -->
+      <section id="section-results" class="content-section">
+        <!-- 💎 Modern Filter Bar -->
+        <div class="filter-dashboard">
+          <div class="filter-header">
+            <h3>Filter Results</h3>
+            <span class="filter-count" id="resultCountLBL">Showing all records</span>
+          </div>
+          
+          <div class="filter-main">
+            <!-- Semester Select -->
+            <div class="modern-select-group">
+              <label>Academic Semester</label>
+              <select id="filterSemester" onchange="filterResults()">
+                <option value="">All Semesters</option>
+                <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                <option value="3">Semester 3</option><option value="4">Semester 4</option>
+                <option value="5">Semester 5</option><option value="6">Semester 6</option>
+                <option value="7">Semester 7</option><option value="8">Semester 8</option>
+              </select>
+            </div>
+
+            <!-- Category Pills (Hidden initially) -->
+            <div class="category-pills-wrap" id="categoryPillsWrap" style="display: none;">
+              <label>Exam Category</label>
+              <div class="pill-group">
+                <button class="pill" data-val="Internal" onclick="setPill(this, 'Internal')">Internal (Mid)</button>
+                <button class="pill" data-val="External" onclick="setPill(this, 'External')">External (SEM)</button>
+              </div>
+              <input type="hidden" id="filterExamClass" value=""/>
+            </div>
+
+            <!-- Sub Type (Dynamic - Hidden initially) -->
+            <div id="subTypeWrapper" class="modern-select-group fade-in" style="display: none;">
+              <label id="subTypeLabel">Specific Exam</label>
+              <select id="filterExamSub" onchange="handleSubChange()">
+                 <!-- Populated by JS -->
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="resultsContainer">
+          <div class="loading-state">Loading…</div>
+        </div>
+      </section>
+
+      <!-- ── Profile Section ── -->
+      <section id="section-profile" class="content-section">
+        <div class="section-card">
+          <h2 class="card-title">My Profile</h2>
+          <div class="profile-grid" id="profileDetails">
+            <div class="loading-state">Loading…</div>
+          </div>
+        </div>
+
+        <!-- 🔒 Security Settings -->
+        <div class="section-card">
+          <h2 class="card-title"><span>🛡️</span> Security Settings</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Update your account password to keep your portal secure.</p>
+          
+          <form id="updatePasswordForm" onsubmit="handlePasswordUpdate(event)" style="max-width: 400px;">
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Current Password</label>
+              <div style="position: relative;">
+                <input type="password" id="oldPassword" required class="search-input" style="width: 100%;" placeholder="Enter current password" />
+                <button type="button" onclick="togglePw('oldPassword', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">👁️</button>
+              </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">New Password</label>
+              <div style="position: relative;">
+                <input type="password" id="newPassword" required class="search-input" style="width: 100%;" placeholder="Enter new password" />
+                <button type="button" onclick="togglePw('newPassword', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">👁️</button>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn-primary" id="pwUpdateBtn">
+              Update Password
+            </button>
+            <div id="pwUpdateMsg" class="hidden" style="margin-top: 1rem; font-size: 0.9rem; font-weight: 600;"></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ── Chat Section ── -->
+      <section id="section-chat" class="content-section">
+        <div class="section-card chat-container">
+          <div class="chat-messages" id="studentChatMsgs">
+            <div class="info-msg">Hello! How can we help you today?</div>
+          </div>
+          <div id="chatReplyPreview"></div>
+          <div class="chat-input-area">
+            <input type="text" id="studentChatInput" placeholder="Type your message here..." onkeypress="if(event.key==='Enter') sendStudentChat()"/>
+            <button class="btn-primary" onclick="sendStudentChat()">Send</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── DATA Section ── -->
+      <section id="section-data" class="content-section">
+        <!-- 🔒 Access Controlled Content -->
+        <div id="dataContentWrapper">
+          <div class="section-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
+            <div class="data-toolbar">
+              <div class="search-box-modern">
+                 <span class="search-prep">Htno:</span>
+                 <input type="text" id="dataSearchInput" placeholder="Enter Htno to search..." />
+                 <button class="btn-search-icon" onclick="handleHtnoSearch()">🔎</button>
+              </div>
+              <div class="data-toggle-group">
+                <button class="data-tab" id="tab-Students" onclick="switchDataTab('Students', this)">👨‍🎓 Students</button>
+                <button class="data-tab" id="tab-Faculty" onclick="switchDataTab('Faculty', this)">👨‍🏫 Faculty</button>
+              </div>
+              <div style="width: 250px;"></div> <!-- Spacer -->
+            </div>
+          </div>
+  
+          <div class="data-layout-container">
+            <!-- Side Vertical Nav (Only for Students) -->
+            <aside class="data-branch-sidebar" id="dataBranchSidebar" style="display: none;">
+               <button class="branch-nav-item active" onclick="switchBranchData('All', this)">🌐 All Branches</button>
+               <button class="branch-nav-item" onclick="switchBranchData('CSE', this)">💻 CSE</button>
+               <button class="branch-nav-item" onclick="switchBranchData('CSE-AI', this)">🤖 CSE-AI</button>
+               <button class="branch-nav-item" onclick="switchBranchData('CSE-AIML', this)">🧠 CSE-AIML</button>
+               <button class="branch-nav-item" onclick="switchBranchData('CSE-DS', this)">📊 CSE-DS</button>
+               <button class="branch-nav-item" onclick="switchBranchData('ECE', this)">📡 ECE</button>
+               <button class="branch-nav-item" onclick="switchBranchData('IT', this)">🌐 IT</button>
+               <button class="branch-nav-item" onclick="switchBranchData('EEE', this)">⚡ EEE</button>
+            </aside>
+  
+            <!-- Main Files list -->
+            <div class="data-main-content">
+               <div id="studentProfileInfo"></div>
+               <div id="dataFilesContainer">
+                  <div class="section-card">
+                     <div class="loading-state">Syncing data repository...</div>
+                  </div>
+               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🚫 Locked Screen -->
+        <div id="dataLockedScreen" class="hidden">
+           <div class="section-card" style="text-align: center; padding: 5rem 2rem;">
+              <div style="font-size: 5rem; margin-bottom: 1.5rem;">🔐</div>
+              <h2 style="color: var(--secondary); font-size: 2rem;">Private Repository</h2>
+              <p style="color: #64748b; max-width: 450px; margin: 1rem auto; font-size: 1.1rem; line-height: 1.6;">
+                Access to the institutional data repository is restricted to authorized personnel only. 
+                If you require access to these documents, please contact the administrator.
+              </p>
+              <button class="btn-primary" style="margin-top: 2rem; padding: 0.8rem 2rem;" 
+                      onclick="showSection('chat', document.querySelector('[data-section=chat]'))">
+                Request Access from Admin
+              </button>
+           </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ══════════════ RESULT DETAIL MODAL ══════════════ -->
+  <div id="resultModal" class="modal-overlay hidden">
+    <div class="modal-box" id="modalContent"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/student.js"></script>
+</body>
+</html>

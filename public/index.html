@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kits Result Portal – B.Tech Result Management System</title>
+  <meta name="description" content="B.Tech College Result Portal – Check your semester results securely with your student login."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+</head>
+<body class="landing-body">
+
+  <!-- Animated background particles -->
+  <div class="bg-particles">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="nav-logo">🎓</div>
+      <span>Kits Result <strong>Portal</strong></span>
+    </div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+      <a href="/student" class="btn-nav-student">Student Login</a>
+      <a href="/admin" class="btn-nav-admin">Admin Portal</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">🏛️ Official Result Management System</div>
+      <h1 class="hero-title">
+        Check Your <span class="gradient-text">B.Tech Results</span><br/>
+        Anytime, Anywhere
+      </h1>
+      <p class="hero-subtitle">
+        Secure, fast and transparent semester result portal for students.<br/>
+        Admins can upload bulk results via Excel in seconds.
+      </p>
+      <div class="hero-actions">
+        <a href="/student" class="btn-primary">
+          <span class="btn-icon">👨‍🎓</span> Student Login
+        </a>
+        <a href="/admin" class="btn-secondary">
+          <span class="btn-icon">🛡️</span> Admin Portal
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-pill">📊 Live Results</div>
+        <div class="stat-pill">🔐 Secure Login</div>
+        <div class="stat-pill">📁 Excel Upload</div>
+        <div class="stat-pill">🎯 SGPA / CGPA</div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="mockup-card">
+        <div class="mockup-header">
+          <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+          <span>Result Card</span>
+        </div>
+        <div class="mockup-body">
+          <div class="mockup-row">
+            <span class="label">Roll No.</span>
+            <span class="value">21CS001</span>
+          </div>
+          <div class="mockup-row">
+            <span class="label">Student</span>
+            <span class="value">Arjun Sharma</span>
+          </div>
+          <div class="mockup-row">
+            <span class="label">Semester</span>
+            <span class="value">V – CSE</span>
+          </div>
+          <div class="mockup-divider"></div>
+          <div class="mockup-subjects">
+            <div class="sub-row"><span>Data Structures</span><span class="grade-badge a">A+</span></div>
+            <div class="sub-row"><span>Algorithms</span><span class="grade-badge o">O</span></div>
+            <div class="sub-row"><span>DBMS</span><span class="grade-badge a">A</span></div>
+            <div class="sub-row"><span>OS</span><span class="grade-badge b">B+</span></div>
+          </div>
+          <div class="mockup-divider"></div>
+          <div class="mockup-result-row">
+            <div class="result-stat">
+              <span class="stat-val">8.75</span>
+              <span class="stat-lbl">SGPA</span>
+            </div>
+            <div class="result-stat">
+              <div class="pass-badge">PASS ✓</div>
+            </div>
+            <div class="result-stat">
+              <span class="stat-val">87.5%</span>
+              <span class="stat-lbl">Overall</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <h2 class="section-title">Everything You Need</h2>
+    <p class="section-sub">A complete ecosystem for result management</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3>Secure Authentication</h3>
+        <p>Students log in with their unique roll number and password. Admins have a separate secure portal.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Detailed Results</h3>
+        <p>View grades, GPA, SGPA, CGPA, subject-wise marks, internal & external marks at a glance.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📁</div>
+        <h3>Excel Bulk Upload</h3>
+        <p>Admins upload a single Excel file to publish results for an entire class or batch instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎓</div>
+        <h3>Student Management</h3>
+        <p>Add, edit, activate or deactivate student accounts. Import complete student data via Excel.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3>Analytics Dashboard</h3>
+        <p>Admin dashboard shows pass/fail rates, branch-wise stats, and overall performance overview.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🖨️</div>
+        <h3>Print Result Card</h3>
+        <p>Students can print or save their official result card directly from the browser.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="about-section" id="about">
+    <div class="about-content">
+      <h2>Built for Modern Colleges</h2>
+      <p>EduResult Portal is designed to modernize the result publication process. No more manual distribution — upload once, accessible by everyone instantly.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© 2024 EduResult Portal · B.Tech Result Management System</p>
+  </footer>
+
+  <script>
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  </script>
+</body>
+</html>

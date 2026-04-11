@@ -1,0 +1,1119 @@
+// Admin Portal Logic
+let currentAdmin = null;
+let socket;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const session = await checkSession();
+    if (session.loggedIn && session.role === 'admin') {
+        currentAdmin = session.user;
+        showAdminDashboard();
+
+        // ⚡ WEBSOCKET ENGINE
+        socket = io();
+        
+        socket.on('admin_new_message', () => {
+            const activeSec = document.querySelector('.content-section.active');
+            if (activeSec && activeSec.id === 'section-admChat') {
+                loadChatList();
+                loadStudentChats();
+            } else {
+                loadStats(true);
+            }
+        });
+
+        socket.on('messages_seen', () => loadStudentChats());
+        socket.on('message_updated', () => loadStudentChats());
+
+        // Refresh lists if results are updated
+        socket.on('results_updated', () => {
+            const activeSec = document.querySelector('.content-section.active');
+            if (activeSec.id === 'section-admResults') loadAdminResults(true);
+            loadStats(true);
+        });
+
+        // Start live UI timer
+        startLiveTimer();
+
+        // Admin Profile Form Listener
+        const profileForm = document.getElementById('adminProfileForm');
+        if (profileForm) {
+            profileForm.addEventListener('submit', handleAdminProfileUpdate);
+        }
+
+    } else {
+        showAdminLogin();
+    }
+});
+
+function startLiveTimer() {
+    setInterval(() => {
+        document.querySelectorAll('.timer-cell[data-expiry]').forEach(cell => {
+            const expiry = new Date(cell.getAttribute('data-expiry'));
+            const now = new Date();
+            const diff = expiry - now;
+
+            if (diff <= 0) {
+                cell.textContent = 'Expired';
+                cell.classList.add('text-danger');
+                return;
+            }
+
+            const mins = Math.floor(diff / 60000);
+            const secs = Math.floor((diff % 60000) / 1000);
+            cell.textContent = `${mins}m ${secs}s`;
+            
+            if (mins < 2) cell.classList.add('text-danger');
+            else cell.classList.remove('text-danger');
+        });
+    }, 1000);
+}
+
+async function checkSession() {
+    try {
+        const res = await fetch('/api/auth/check');
+        return await res.json();
+    } catch (e) {
+        return { loggedIn: false };
+    }
+}
+
+function showAdminLogin() {
+    document.getElementById('adminLoginScreen').classList.remove('hidden');
+    document.getElementById('adminDashboard').classList.add('hidden');
+}
+
+function showAdminDashboard() {
+    document.getElementById('adminLoginScreen').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.remove('hidden');
+    document.getElementById('adminSidebarName').textContent = currentAdmin.name;
+    document.getElementById('adminGreeting').textContent = `Welcome, ${currentAdmin.username}!`;
+    loadStats();
+}
+
+// Admin Login
+document.getElementById('adminLoginForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('adminUser').value;
+    const password = document.getElementById('adminPass').value;
+    const errorEl = document.getElementById('adminLoginError');
+    
+    try {
+        const res = await fetch('/api/auth/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            currentAdmin = data.admin;
+            showAdminDashboard();
+        } else {
+            errorEl.textContent = data.message;
+            errorEl.classList.remove('hidden');
+        }
+    } catch (err) {
+        errorEl.textContent = "Server error.";
+        errorEl.classList.remove('hidden');
+    }
+};
+
+async function loadStats() {
+    try {
+        const res = await fetch('/api/admin/stats');
+        const data = await res.json();
+        if (data.success) {
+            const s = data.stats;
+            document.getElementById('dTotalStudents').textContent = s.totalStudents;
+            document.getElementById('dActiveStudents').textContent = s.activeStudents;
+            document.getElementById('dTotalResults').textContent = s.totalResults;
+            document.getElementById('dPassCount').textContent = s.passCount;
+            document.getElementById('dFailCount').textContent = s.failCount;
+        }
+    } catch (e) {}
+}
+
+// Student Management
+async function loadStudents() {
+    const search = document.getElementById('stuSearch').value;
+    const branch = document.getElementById('stuBranch').value;
+    const year = document.getElementById('stuYear').value;
+    
+    const query = new URLSearchParams({ search, branch, year }).toString();
+    const wrap = document.getElementById('studentsTableWrap');
+    
+    try {
+        const res = await fetch(`/api/admin/students?${query}`);
+        const data = await res.json();
+        
+        if (data.success) {
+            if (!data.students.length) {
+                wrap.innerHTML = `<p style="padding: 2rem; text-align: center">No students found.</p>`;
+                return;
+            }
+            
+            wrap.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Roll Number</th>
+                            <th>Name</th>
+                            <th>Branch</th>
+                            <th>Year</th>
+                            <th>Account</th>
+                            <th>Data Access</th>
+                            <th>Session Timer</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.students.map(s => {
+                            let timeLeft = '--';
+                            let timeClass = '';
+                            let expiryAttr = '';
+                            if (s.sessionExpiry) {
+                                expiryAttr = `data-expiry="${s.sessionExpiry}"`;
+                                const diff = new Date(s.sessionExpiry) - new Date();
+                                if (diff > 0) {
+                                    const mins = Math.floor(diff / 60000);
+                                    const secs = Math.floor((diff % 60000) / 1000);
+                                    timeLeft = `${mins}m ${secs}s`;
+                                    if (mins < 2) timeClass = 'text-danger'; // Highlight last 2 mins
+                                } else {
+                                    timeLeft = 'Expired';
+                                    timeClass = 'text-danger';
+                                }
+                            }
+                            
+                            return `
+                            <tr>
+                                <td><strong>${s.rollNumber}</strong></td>
+                                <td>${s.name}</td>
+                                <td>${s.branch}</td>
+                                <td>Year ${s.year}</td>
+                                <td><span class="status-pill ${s.isActive ? 'active' : 'inactive'}">${s.isActive ? 'Active' : 'Inactive'}</span></td>
+                                <td>
+                                    <button class="btn-toggle ${s.hasDataAccess ? 'enabled' : 'disabled'}" onclick="toggleDataAccess('${s._id}')">
+                                        ${s.hasDataAccess ? '🔓 Allowed' : '🔒 Locked'}
+                                    </button>
+                                </td>
+                                <td class="timer-cell ${timeClass}" ${expiryAttr} style="font-weight:700">${timeLeft}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="btn-icon-only" onclick="toggleStudentStatus('${s._id}')" title="Toggle Active">🔄</button>
+                                        <button class="btn-icon-only" onclick="setStudentTimer('${s._id}', '${s.rollNumber}')" title="Set Timer">⏱️</button>
+                                        <button class="btn-icon-only" onclick="clearStudentTimer('${s._id}', '${s.rollNumber}')" title="Clear Timer" style="color: var(--danger)">✖️</button>
+                                        <button class="btn-icon-only" onclick="resetStudentPassword('${s._id}', '${s.rollNumber}')" title="Change Password">🔑</button>
+                                        <button class="btn-icon-only delete" onclick="deleteStudent('${s._id}')" title="Delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;}).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+    } catch (e) {
+        wrap.innerHTML = `<p style="padding: 2rem; color: var(--danger)">Failed to load data.</p>`;
+    }
+}
+
+async function setStudentTimer(id, roll) {
+    const mins = prompt(`Set session duration for ${roll} (in minutes). \nEnter 0 to disable timer:`, "10");
+    if (mins === null) return;
+
+    try {
+        const res = await fetch(`/api/admin/students/${id}/timer`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ minutes: parseInt(mins) })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            loadStudents();
+        }
+    } catch (e) {
+        alert("Server error.");
+    }
+}
+
+async function resetStudentPassword(id, roll) {
+    const newPass = prompt(`Enter new password for ${roll}:`);
+    if (newPass === null || newPass.trim() === "") return;
+
+    try {
+        const res = await fetch(`/api/admin/students/${id}/password`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: newPass })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("Password updated successfully!");
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch (e) {
+        alert("Server error.");
+    }
+}
+
+async function toggleStudentStatus(id) {
+    const res = await fetch(`/api/admin/students/${id}/toggle`, { method: 'PATCH' });
+    const data = await res.json();
+    if (data.success) loadStudents();
+}
+
+async function deleteStudent(id) {
+    if (!confirm("Are you sure? This will delete the student permanently.")) return;
+    const res = await fetch(`/api/admin/students/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) loadStudents();
+}
+
+// Result Management
+async function loadAdminResults() {
+    const branch = document.getElementById('resBranch').value;
+    const semester = document.getElementById('resSemester').value;
+    const examType = document.getElementById('resExam').value;
+    
+    const query = new URLSearchParams({ branch, semester, examType }).toString();
+    const wrap = document.getElementById('resultsTableWrap');
+    
+    try {
+        const res = await fetch(`/api/admin/results?${query}`);
+        const data = await res.json();
+        
+        if (data.success) {
+            if (!data.results.length) {
+                wrap.innerHTML = `<p style="padding: 2rem; text-align: center">No result records found.</p>`;
+                return;
+            }
+            
+            wrap.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Roll Number</th>
+                            <th>Name</th>
+                            <th>Sem</th>
+                            <th>Exam</th>
+                            <th>SGPA</th>
+                            <th>Result</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.results.map(r => `
+                            <tr>
+                                <td><strong>${r.rollNumber}</strong></td>
+                                <td>${r.studentName}</td>
+                                <td>Sem ${r.semester}</td>
+                                <td>${r.examType}</td>
+                                <td>${r.sgpa}</td>
+                                <td><span class="status-pill ${r.result === 'Pass' ? 'active' : 'inactive'}">${r.result}</span></td>
+                                <td>
+                                    <button class="btn-icon-only delete" onclick="deleteResult('${r._id}')">🗑️</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+    } catch (e) {}
+}
+
+async function deleteResult(id) {
+    if (!confirm("Delete this result record?")) return;
+    const res = await fetch(`/api/admin/results/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) loadAdminResults();
+}
+
+// Excel Uploads
+async function handleStudentUpload() {
+    const fileInput = document.getElementById('stuFile');
+    if (!fileInput.files.length) return;
+    
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    
+    const progressWrap = document.getElementById('stuUploadProgress');
+    const progressBar = document.getElementById('stuProgressBar');
+    const status = document.getElementById('stuUploadStatus');
+    const resultBox = document.getElementById('stuUploadResult');
+    
+    progressWrap.classList.remove('hidden');
+    resultBox.classList.add('hidden');
+    progressBar.style.width = '30%';
+    status.textContent = 'Processing Excel...';
+
+    try {
+        const res = await fetch('/api/admin/upload-students', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        
+        progressBar.style.width = '100%';
+        if (data.success) {
+            status.textContent = 'Upload Complete!';
+            resultBox.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <p style="color: var(--success); margin:0">✅ ${data.message}</p>
+                    <button onclick="clearUploadStatus('stu')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">✕</button>
+                </div>`;
+            loadUploadHistory('students', 'stuHistoryContainer');
+            if (data.errors.length) {
+                resultBox.innerHTML += `<details style="margin-top:0.5rem"><summary>View ${data.errors.length} skipped rows</summary><pre>${data.errors.join('\n')}</pre></details>`;
+            }
+        } else {
+            status.textContent = 'Upload Failed';
+            resultBox.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <p style="color: var(--danger); margin:0">❌ ${data.message}</p>
+                    <button onclick="clearUploadStatus('stu')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">✕</button>
+                </div>`;
+        }
+        resultBox.classList.remove('hidden');
+    } catch (e) {
+        status.textContent = 'Network Error';
+    }
+}
+
+function updateUploadSubTypes() {
+    const parent = document.getElementById('uploadResType').value;
+    const subSelect = document.getElementById('uploadResSub');
+    const subLabel = document.getElementById('uploadSubLabel');
+    
+    if (parent === 'Internal') {
+        subLabel.textContent = "Internal Type";
+        subSelect.innerHTML = `
+            <option value="Mid-1">Mid-1 Exam</option>
+            <option value="Mid-2">Mid-2 Exam</option>
+            <option value="Assignment">Assignment</option>
+        `;
+    } else {
+        subLabel.textContent = "External Type";
+        subSelect.innerHTML = `
+            <option value="Regular">Regular (Main)</option>
+            <option value="Supply">Supplementary (Supply)</option>
+        `;
+    }
+}
+
+async function handleResultUpload() {
+    const fileInput = document.getElementById('resFile');
+    if (!fileInput.files.length) return;
+
+    const sem = document.getElementById('uploadResSem').value;
+    const type = document.getElementById('uploadResSub').value;
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('semester', sem);
+    formData.append('examType', type);
+
+    const progressWrap = document.getElementById('resUploadProgress');
+    const progressBar = document.getElementById('resProgressBar');
+    const statusText = document.getElementById('resUploadStatus');
+    const resultDiv = document.getElementById('resUploadResult');
+
+    try {
+        progressWrap.classList.remove('hidden');
+        resultDiv.classList.add('hidden');
+        progressBar.style.width = '30%';
+        statusText.textContent = 'Uploading...';
+
+        const res = await fetch('/api/admin/upload-results', {
+            method: 'POST',
+            body: formData
+        });
+        
+        progressBar.style.width = '100%';
+        const data = await res.json();
+        
+        if (data.success) {
+            statusText.textContent = 'Processing Complete!';
+            resultDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <p style="color:green; margin:0">✅ ${data.message}<br/>${data.details}</p>
+                    <button onclick="clearUploadStatus('res')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">✕</button>
+                </div>`;
+            resultDiv.classList.remove('hidden');
+            loadStats();
+            loadUploadHistory('results', 'resHistoryContainer');
+        } else {
+            statusText.textContent = 'Upload Failed';
+            resultDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <p style="color:red; margin:0">❌ ${data.message}</p>
+                    <button onclick="clearUploadStatus('res')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">✕</button>
+                </div>`;
+            resultDiv.classList.remove('hidden');
+        }
+    } catch (e) {
+        statusText.textContent = 'Network Error';
+    } finally {
+        fileInput.value = '';
+    }
+}
+
+// Manual Add Student
+async function submitAddStudent(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const body = Object.fromEntries(formData.entries());
+    const msg = document.getElementById('addStudentMsg');
+    
+    try {
+        const res = await fetch('/api/admin/students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        
+        msg.classList.remove('hidden');
+        if (data.success) {
+            msg.className = 'upload-result';
+            msg.style.color = 'var(--success)';
+            msg.textContent = 'Student added successfully!';
+            e.target.reset();
+        } else {
+            msg.className = 'upload-result';
+            msg.style.color = 'var(--danger)';
+            msg.textContent = 'Error: ' + data.message;
+        }
+    } catch (e) {
+        msg.textContent = "Error connecting to server.";
+    }
+}
+
+// UI Helpers
+function adminShowSection(id, btn) {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    
+    // Auto-fix ID to match HTML format (section-XXXX)
+    const targetId = id.startsWith('section-') ? id : `section-${id}`;
+    const target = document.getElementById(targetId);
+    
+    if (target) {
+        target.classList.add('active');
+        // Update title bar
+        const titleText = btn.textContent.trim().replace(/^[^a-zA-Z0-9\s]+/, '');
+        document.getElementById('adminTopTitle').textContent = titleText;
+    }
+    btn.classList.add('active');
+
+    if (id.includes('Dashboard')) loadStats();
+    if (id.includes('Students') && !id.includes('Upload')) loadStudents();
+    if (id.includes('Results') && !id.includes('Upload')) loadAdminResults();
+    if (id.includes('UploadStudents')) {
+        loadUploadHistory('students', 'stuHistoryContainer');
+    }
+    if (id.includes('UploadResults')) {
+        loadUploadHistory('results', 'resHistoryContainer');
+    }
+    if (id.includes('Chat')) {
+        loadChatList();
+        loadStudentChats();
+    }
+    if (id.includes('Data')) {
+        loadAdminDataFiles();
+    }
+    if (id.includes('Profile')) {
+        document.getElementById('admUsername').value = currentAdmin.username;
+        document.getElementById('admProfileMsg').className = 'hidden';
+    }
+
+    // Auto-close sidebar on mobile
+    if (window.innerWidth <= 1024) {
+        document.querySelector('.sidebar').classList.remove('active');
+    }
+}
+
+async function loadUploadHistory(type, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    try {
+        const res = await fetch('/api/admin/upload-history');
+        const data = await res.json();
+        
+        if (data.success) {
+            let history = data.history;
+            if (type) {
+                history = history.filter(h => h.uploadType.toLowerCase() === type.toLowerCase());
+            }
+
+            if (history.length === 0) {
+                container.innerHTML = `<p style="text-align:center; padding: 2rem;">No ${type || 'upload'} history found.</p>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Filename</th>
+                            ${type === 'results' ? '<th>Category</th>' : ''}
+                            <th>Records</th>
+                            <th>Admin</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${history.map(h => {
+                            const cat = (h.semester || h.examType)
+                                ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#eff6ff;border:1px solid #93c5fd;border-radius:20px;padding:3px 10px;font-size:0.75rem;font-weight:700;color:#1d4ed8;white-space:nowrap">📚 Sem ${h.semester || '?'} &nbsp;·&nbsp; ${h.examType || '?'}</span>`
+                                : `<span style="color:#94a3b8;font-size:0.8rem">—</span>`;
+                            return `
+                            <tr>
+                                <td>${new Date(h.timestamp).toLocaleString()}</td>
+                                <td style="color:var(--primary)">${h.filename}</td>
+                                ${type === 'results' ? `<td>${cat}</td>` : ''}
+                                <td><b>${h.recordsCount}</b></td>
+                                <td>${h.uploadedBy}</td>
+                                <td>
+                                    <button class="btn-secondary" style="background:#fee2e2;color:#b91c1c;border:none;padding:4px 8px;border-radius:6px;cursor:pointer"
+                                        onclick="rollbackUpload('${h._id}','${h.uploadType}','${type}','${containerId}')">
+                                        🗑️ Rollback
+                                    </button>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+                </div>
+            `;
+        }
+    } catch (e) { container.innerHTML = 'Error loading history.'; }
+}
+
+async function rollbackUpload(id, rollbackType, filterType, containerId) {
+    if (!confirm(`Warning: This will PERMANENTLY remove all ${rollbackType} from this Excel file. Are you sure?`)) return;
+
+    try {
+        const res = await fetch(`/api/admin/upload-history/${id}/rollback`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            loadUploadHistory(filterType, containerId);
+            loadStats();
+        } else {
+            alert("Rollback failed: " + data.message);
+        }
+    } catch (e) { alert("Error connecting to server."); }
+}
+
+async function handleAdminProfileUpdate(e) {
+    if (e) e.preventDefault();
+    
+    const btn = document.querySelector('#adminProfileForm button[type="submit"]');
+    const originalText = btn ? btn.textContent : 'Update Profile';
+    
+    const usernameEl = document.getElementById('admUsername');
+    const oldPasswordEl = document.getElementById('admOldPassword');
+    const newPasswordEl = document.getElementById('admNewPassword');
+    const msgEl = document.getElementById('admProfileMsg');
+
+    if (!usernameEl || !msgEl) {
+        alert('Internal Error: Form elements missing!');
+        return;
+    }
+
+    const username = usernameEl.value.trim();
+    const oldPassword = oldPasswordEl ? oldPasswordEl.value : '';
+    const newPassword = newPasswordEl ? newPasswordEl.value : '';
+
+    if (newPassword && !oldPassword) {
+        msgEl.textContent = "Current password is required to change password.";
+        msgEl.className = "error-msg";
+        msgEl.classList.remove('hidden');
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Updating...';
+    }
+
+    try {
+        const res = await fetch('/api/auth/admin/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, oldPassword, newPassword })
+        });
+        const data = await res.json();
+
+        msgEl.classList.remove('hidden');
+        if (data.success) {
+            msgEl.textContent = data.message;
+            msgEl.className = "success-msg";
+            
+            // Update local state and UI
+            if (currentAdmin) currentAdmin.username = username;
+            const greet = document.getElementById('adminGreeting');
+            if (greet) greet.textContent = `Welcome, ${username}!`;
+            
+            // Clear passwords
+            if (oldPasswordEl) oldPasswordEl.value = '';
+            if (newPasswordEl) newPasswordEl.value = '';
+        } else {
+            msgEl.textContent = data.message;
+            msgEl.className = "error-msg";
+        }
+    } catch (err) {
+        alert('Server connection error!');
+        msgEl.textContent = "Server error. Try again.";
+        msgEl.className = "error-msg";
+        msgEl.classList.remove('hidden');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+}
+
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('active');
+}
+
+function clearUploadStatus(prefix) {
+    document.getElementById(`${prefix}UploadProgress`).classList.add('hidden');
+    document.getElementById(`${prefix}UploadResult`).classList.add('hidden');
+    document.getElementById(`${prefix}UploadResult`).innerHTML = '';
+    document.getElementById(`${prefix}ProgressBar`).style.width = '0%';
+}
+
+function adminLogout() {
+    fetch('/api/auth/logout', { method: 'POST' }).then(() => window.location.reload());
+}
+
+// Drag & Drop Helpers
+function addDragOver(id) { document.getElementById(id).classList.add('dragover'); }
+function removeDragOver(id) { document.getElementById(id).classList.remove('dragover'); }
+function handleDrop(e, inputId) {
+    e.preventDefault();
+    const dropZoneId = e.currentTarget.id;
+    removeDragOver(dropZoneId);
+    if (e.dataTransfer.files.length) {
+        document.getElementById(inputId).files = e.dataTransfer.files;
+        if (inputId === 'stuFile') handleStudentUpload();
+        if (inputId === 'resFile') handleResultUpload();
+    }
+}
+
+function togglePw(id, btn) {
+    const input = document.getElementById(id);
+    input.type = input.type === 'password' ? 'text' : 'password';
+    btn.textContent = input.type === 'password' ? '👁️' : '🔒';
+}
+
+async function loadChatList() {
+    try {
+        const res = await fetch('/api/chat/admin/list');
+        const data = await res.json();
+        if (data.success) {
+            const list = document.getElementById('adminChatList');
+            if (data.list.length === 0) {
+                list.innerHTML = `<p style="padding: 2rem; text-align:center">No active chats.</p>`;
+                return;
+            }
+            list.innerHTML = data.list.map(c => `
+                <div class="chat-list-item ${activeChatRoll === c._id ? 'active' : ''}" onclick="openChat('${c._id}', '${c.name}')">
+                    <div class="chat-list-name">${c.name || 'Student'} (${c._id})</div>
+                    <div class="chat-list-msg">${c.lastMsg}</div>
+                    <div class="chat-list-time">${new Date(c.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                </div>
+            `).join('');
+        }
+    } catch (e) {}
+}
+
+let activeChatRoll = null;
+let currentAdminReplyId = null;
+
+async function openChat(roll, name) {
+    activeChatRoll = roll;
+    document.getElementById('adminChatArea').style.visibility = 'visible';
+    document.getElementById('activeChatStudent').textContent = `Chatting with: ${name} (${roll})`;
+    loadStudentChats();
+    markSeen(roll);
+}
+
+async function markSeen(otherRoll) {
+    try {
+        await fetch('/api/chat/mark-read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ otherRoll })
+        });
+    } catch (e) {}
+}
+
+async function loadStudentChats() {
+    if (!activeChatRoll) return;
+    try {
+        const res = await fetch(`/api/chat/student/${activeChatRoll}`);
+        const data = await res.json();
+        if (data.success) {
+            renderChats(data.chats, 'adminChatMsgs', 'admin');
+        }
+    } catch (e) {}
+}
+
+async function sendAdminChat() {
+    if (!activeChatRoll) return;
+    const input = document.getElementById('adminChatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    try {
+        const res = await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, receiverRoll: activeChatRoll, replyTo: currentAdminReplyId })
+        });
+        if ((await res.json()).success) {
+            input.value = '';
+            cancelAdminReply();
+            loadStudentChats();
+            loadChatList();
+        }
+    } catch (e) {}
+}
+
+async function clearStudentTimer(id, roll) {
+    if (!confirm(`Clear session timer for Student ${roll}?`)) return;
+    try {
+        const res = await fetch(`/api/admin/students/${id}/timer`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ minutes: 0 })
+        });
+        const data = await res.json();
+        if (data.success) {
+            loadStudents(); // Refresh list
+        }
+    } catch (e) { alert("Error clearing timer."); }
+}
+
+async function clearAllChats() {
+    if (!confirm("⚠️ This will DELETE ALL chat history for ALL students. Continue?")) return;
+    try {
+        const res = await fetch('/api/chat/clear-all', { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        }
+    } catch (e) { alert("Error clearing chats."); }
+}
+
+function renderChats(chats, containerId, myRoll) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const scrollAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+
+    const chatMap = new Map(chats.map(c => [c._id, c]));
+
+    const html = chats.map(c => {
+        const isMe = c.senderRoll === myRoll;
+        const replyMsg = c.replyTo ? chatMap.get(c.replyTo) : null;
+
+        return `
+            <div class="chat-bubble ${isMe ? 'me' : 'them'}" id="msg-${c._id}">
+                ${isMe ? `<button class="msg-actions-btn" onclick="toggleMsgMenu('${c._id}')">▼</button>` : ''}
+                
+                <div class="msg-menu" id="menu-${c._id}">
+                    <button onclick="replyToMsg('${c._id}', '${c.message.replace(/'/g, "\\'")}')">↩ Reply</button>
+                    <button onclick="copyMsg('${c.message.replace(/'/g, "\\'")}')">📋 Copy</button>
+                    ${isMe && !c.isDeleted ? `
+                        <button onclick="editMsg('${c._id}', '${c.message.replace(/'/g, "\\'")}')">📝 Edit</button>
+                        <button class="btn-delete" onclick="deleteMsg('${c._id}')">🗑️ Delete</button>
+                    ` : ''}
+                </div>
+
+                <div class="chat-sender">${isMe ? 'You' : (c.studentName || 'Student')}</div>
+                
+                ${replyMsg ? `
+                    <div class="reply-quote">
+                        <strong>${replyMsg.senderRoll === myRoll ? 'You' : 'Student'}:</strong> ${replyMsg.message}
+                    </div>
+                ` : ''}
+
+                <div class="chat-msg">
+                    ${c.message}
+                    ${c.isEdited ? '<span style="font-size:0.6rem; opacity:0.6; margin-left:5px">(edited)</span>' : ''}
+                </div>
+
+                <div class="chat-meta">
+                    <span class="chat-time">${new Date(c.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    ${isMe ? `
+                        <span class="chat-status ${c.status}">
+                            ${c.status === 'seen' ? '✓✓' : '✓'}
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    if (container.innerHTML !== html) {
+        container.innerHTML = html;
+        if (scrollAtBottom) container.scrollTop = container.scrollHeight;
+    }
+}
+
+function toggleMsgMenu(id) {
+    const menu = document.getElementById(`menu-${id}`);
+    const allMenus = document.querySelectorAll('.msg-menu');
+    allMenus.forEach(m => { if(m !== menu) m.style.display = 'none'; });
+    menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function replyToMsg(id, text) {
+    currentAdminReplyId = id;
+    const preview = document.getElementById('adminChatReplyPreview');
+    preview.innerHTML = `
+        <div class="reply-preview">
+            <span class="reply-preview-text">Replying to: "${text}"</span>
+            <button onclick="cancelAdminReply()" style="background:none; border:none; cursor:pointer">✕</button>
+        </div>
+    `;
+    document.getElementById('adminChatInput').focus();
+    toggleMsgMenu(id);
+}
+
+function cancelAdminReply() {
+    currentAdminReplyId = null;
+    document.getElementById('adminChatReplyPreview').innerHTML = '';
+}
+
+function copyMsg(text) {
+    navigator.clipboard.writeText(text);
+    alert("Message copied!");
+}
+
+async function editMsg(id, oldText) {
+    const newText = prompt("Edit message:", oldText);
+    if (!newText || newText === oldText) return;
+    try {
+        await fetch(`/api/chat/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: newText })
+        });
+        loadStudentChats();
+    } catch (e) {}
+}
+
+async function deleteMsg(id) {
+    if (!confirm("Delete message for everyone?")) return;
+    try {
+        await fetch(`/api/chat/${id}`, { method: 'DELETE' });
+        loadStudentChats();
+    } catch (e) {}
+}
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.chat-bubble')) {
+        document.querySelectorAll('.msg-menu').forEach(m => m.style.display = 'none');
+    }
+});
+
+async function bulkClearData() {
+    document.getElementById('clearDataModal').classList.remove('hidden');
+}
+
+function closeClearModal() {
+    document.getElementById('clearDataModal').classList.add('hidden');
+}
+
+async function confirmDelete(target) {
+    const doubleCheck = confirm(`Are you absolutely sure you want to delete all ${target}? This cannot be undone.`);
+    if (!doubleCheck) return;
+
+    try {
+        const res = await fetch(`/api/admin/bulk/clear/${target}`, { method: 'DELETE' });
+        
+        // If server returns error page instead of JSON
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Server Response:', errorText);
+            alert(`Server Error (${res.status}): Please restart your server and try again.`);
+            return;
+        }
+
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch (e) {
+        console.error('Fetch Error:', e);
+        alert("Connection error. Is the server running?");
+    } finally {
+        closeClearModal();
+    }
+}
+
+async function handleDataUpload(e) {
+    e.preventDefault();
+    const btn = document.getElementById('dataUploadBtn');
+    const fileField = document.getElementById('dataFileField');
+    
+    if (!fileField.files[0]) {
+        alert("Please select a file to upload.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('title', document.getElementById('dataTitle').value);
+    formData.append('description', document.getElementById('dataDesc').value);
+    formData.append('category', document.getElementById('dataCategory').value);
+    formData.append('branch', document.getElementById('dataBranch').value);
+    formData.append('role', document.getElementById('dataRole').value);
+    formData.append('file', fileField.files[0]);
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner-small" style="margin:0 auto"></div>';
+
+    try {
+        const res = await fetch('/api/admin/upload-data', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("✨ Resource published and synchronized!");
+            e.target.reset();
+            resetFileLabel();
+            loadAdminDataFiles();
+        } else {
+            alert("❌ Upload Failed: " + data.message);
+        }
+    } catch (err) { 
+        alert("❌ Connection error. Upload failed."); 
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="btn-content">⚡ Upload & Publish to Portal</span>';
+    }
+}
+
+// Drag & Drop for Data
+function handleDataDrop(e) {
+    e.preventDefault();
+    const dropZone = document.getElementById('dataFileDropZone');
+    dropZone.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length) {
+        document.getElementById('dataFileField').files = files;
+        updateFileLabel(document.getElementById('dataFileField'));
+    }
+}
+
+function updateFileLabel(input) {
+    const label = document.getElementById('fileSelectedLabel');
+    if (input.files && input.files[0]) {
+        label.textContent = `✅ Selected: ${input.files[0].name}`;
+        label.classList.remove('hidden');
+    } else {
+        resetFileLabel();
+    }
+}
+
+function resetFileLabel() {
+    const label = document.getElementById('fileSelectedLabel');
+    label.classList.add('hidden');
+    label.textContent = '';
+}
+
+async function loadAdminDataFiles() {
+    const list = document.getElementById('adminDataFileList');
+    try {
+        const res = await fetch('/api/admin/data-files');
+        const data = await res.json();
+        
+        if (data.success) {
+            if (data.files.length === 0) {
+                list.innerHTML = `
+                    <div style="flex-grow:1; display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0.5; padding:3rem 0;">
+                        <span style="font-size:3rem; margin-bottom:1rem;">📂</span>
+                        <p>No assets uploaded yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = data.files.map(f => {
+                let icon = '📄';
+                const ext = f.originalName.split('.').pop().toLowerCase();
+                if (['jpg','jpeg','png','gif'].includes(ext)) icon = '🖼️';
+                if (ext === 'pdf') icon = '📕';
+                if (['xlsx','xls'].includes(ext)) icon = '📊';
+                if (['doc','docx'].includes(ext)) icon = '📝';
+
+                return `
+                <div class="file-item-premium">
+                    <div class="file-icon-box">${icon}</div>
+                    <div class="file-meta-premium">
+                        <h4>${f.title}</h4>
+                        <p>${new Date(f.uploadedAt).toLocaleDateString()} | ${f.originalName}</p>
+                    </div>
+                    <div class="file-badge-premium">${f.category}</div>
+                    <div class="action-btns">
+                        <a href="${f.path}" target="_blank" class="btn-icon-only" title="View Resource">👁️</a>
+                        <button class="btn-icon-only delete" onclick="deleteDataFile('${f._id}')" title="Delete Permanent">🗑️</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+    } catch (e) {
+        list.innerHTML = `<p style="color:var(--danger); text-align:center; padding:1rem;">Failed to synchronize assets.</p>`;
+    }
+}
+
+async function deleteDataFile(id) {
+    if (!confirm("Delete this file permanently?")) return;
+    try {
+        const res = await fetch(`/api/admin/data-files/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) loadAdminDataFiles();
+    } catch (e) { alert("Delete failed"); }
+}
+
+async function toggleDataAccess(id) {
+    try {
+        const res = await fetch(`/api/admin/students/${id}/data-access`, { method: 'PATCH' });
+        const data = await res.json();
+        if (data.success) {
+            loadStudents(); 
+        }
+    } catch (e) {
+        console.error("Access toggle failed", e);
+    }
+}
+
+function togglePw(id, btn) {
+    const input = document.getElementById(id);
+    const isPw = input.type === 'password';
+    input.type = isPw ? 'text' : 'password';
+    btn.textContent = isPw ? '🔒' : '👁️';
+}
+
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('active');
+}

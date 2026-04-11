@@ -1,0 +1,240 @@
+/* Student Specific Overrides and Components */
+
+/* Semester Cards (Unique to Student Portal) */
+.semester-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.sem-card {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.sem-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-5px);
+  background: white;
+  box-shadow: var(--shadow-lg);
+}
+
+.sem-card-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.sem-title { font-weight: 700; font-size: 1.125rem; }
+.sem-badge { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 100px; }
+.sem-badge.pass { background: #dcfce7; color: #15803d; }
+.sem-badge.fail { background: #fee2e2; color: #b91c1c; }
+
+.sem-stats {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.sem-stat-item { display: flex; flex-direction: column; }
+.sem-stat-val { font-weight: 800; color: var(--secondary); }
+.sem-stat-lbl { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+
+/* Result Detail Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.modal-box {
+  background: white;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  border-radius: 24px;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  padding: 2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+}
+
+.modal-close {
+  background: white;
+  border: 1px solid var(--border);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1.5rem;
+}
+
+.result-header-details {
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  background: #fdfdfd;
+}
+
+.result-table-wrap { padding: 0 2rem 2rem; }
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.result-table th {
+  background: #f8fafc;
+  text-align: left;
+  padding: 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.result-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+.profile-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-item label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
+.profile-item span { font-size: 1.1rem; font-weight: 600; color: var(--secondary); }
+
+/* Session Timer Component */
+.timer-box {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 0.5rem 1rem;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 800;
+  font-family: 'Courier New', Courier, monospace;
+  border: 1px solid #fecaca;
+  box-shadow: 0 2px 4px rgba(185, 28, 28, 0.1);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+.timer-icon { font-size: 1rem; }
+
+/* 💎 Premium Filter Dashboard */
+.filter-dashboard {
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  border: 1px solid var(--border);
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.filter-header h3 { font-size: 1rem; margin: 0; color: var(--secondary); }
+.filter-count { font-size: 0.75rem; font-weight: 700; color: var(--primary); background: #f0f7ff; padding: 4px 12px; border-radius: 100px; }
+
+.filter-main {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.modern-select-group, .category-pills-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modern-select-group label, .category-pills-wrap label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.modern-select-group select {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  min-width: 180px;
+  outline: none;
+  font-weight: 600;
+  color: var(--secondary);
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+/* Category Pills */
+.pill-group {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 14px;
+  gap: 4px;
+}
+
+.pill {
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pill.active {
+  background: white;
+  color: var(--primary);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}

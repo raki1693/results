@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Portal – Kits Result</title>
+  <meta name="description" content="Kits Result administration portal to manage students and academic data."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <link rel="stylesheet" href="/css/admin.css"/>
+</head>
+<body class="portal-body">
+
+  <div class="bg-particles">
+    <span></span><span></span><span></span>
+  </div>
+
+  <!-- ══════════════ ADMIN LOGIN ══════════════ -->
+  <div id="adminLoginScreen" class="auth-screen">
+    <div class="auth-card admin-card">
+      <div class="auth-header">
+        <a href="/" class="back-link">← Home</a>
+        <div class="auth-logo admin-logo">🛡️</div>
+        <h1>Admin Portal</h1>
+        <p>Restricted access – authorized personnel only</p>
+      </div>
+      <form id="adminLoginForm" class="auth-form">
+        <div class="form-group">
+          <label for="adminUser">Username</label>
+          <input type="text" id="adminUser" placeholder="admin" required/>
+        </div>
+        <div class="form-group">
+          <label for="adminPass">Password</label>
+          <div class="input-wrap">
+            <input type="password" id="adminPass" placeholder="Enter admin password" required/>
+            <button type="button" class="toggle-pw" onclick="togglePw('adminPass', this)">👁️</button>
+          </div>
+        </div>
+        <div id="adminLoginError" class="error-msg hidden"></div>
+        <button type="submit" class="btn-submit admin-submit">
+          <span class="btn-text">🛡️ Admin Sign In</span>
+        </button>
+      </form>
+      <p class="auth-hint">Default: <strong>admin</strong> / <strong>admin@123</strong></p>
+    </div>
+  </div>
+
+  <!-- ══════════════ ADMIN DASHBOARD ══════════════ -->
+  <div id="adminDashboard" class="dashboard hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar admin-sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">🛡️</span>
+        <span class="brand-name">Kits Result</span>
+      </div>
+      <div class="student-info-box">
+        <div class="info-avatar admin-avatar">A</div>
+        <div class="info-details">
+          <strong id="adminSidebarName">Administrator</strong>
+          <span>College Admin</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" onclick="adminShowSection('admDashboard', this)"><span>📊</span> Dashboard</a>
+        <a href="#" class="nav-item" onclick="adminShowSection('admStudents', this)"><span>👥</span> Students</a>
+        <a href="#" class="nav-item" onclick="adminShowSection('admUploadStudents', this)"><span>📤</span> Upload Students</a>
+        <a href="#" class="nav-item" data-section="admResults" onclick="adminShowSection('admResults', this)"><span>📋</span> Results</a>
+        <a href="#" class="nav-item" data-section="admData" onclick="adminShowSection('admData', this)"><span>🗂️</span> Upload DATA</a>
+        <a href="#" class="nav-item" data-section="admChat" onclick="adminShowSection('admChat', this)"><span>💬</span> Support Chats</a>
+        <a href="#" class="nav-item" onclick="adminShowSection('admUploadResults', this)"><span>📥</span> Upload Results</a>
+        <a href="#" class="nav-item" onclick="adminShowSection('admAddStudent', this)"><span>➕</span> Add Student</a>
+        <a href="#" class="nav-item" onclick="adminShowSection('admProfile', this)"><span>👤</span> My Profile</a>
+      </nav>
+      <button class="logout-btn" onclick="adminLogout()">🚪 Logout</button>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <div class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="adminTopTitle">Dashboard</div>
+        <div class="topbar-right">
+          <span class="greeting" id="adminGreeting">Welcome, Admin!</span>
+        </div>
+      </div>
+
+      <!-- ── Upload DATA Section (PREMIUM) ── -->
+      <section id="section-admData" class="content-section">
+        <div class="premium-header">
+           <div class="header-main">
+              <div class="header-icon">📂</div>
+              <div>
+                 <h2>Institutional Data Assets</h2>
+                 <p>Distribute academic resources, notices, and critical documentation to students.</p>
+              </div>
+           </div>
+        </div>
+
+        <div class="dashboard-grid glass-layout">
+          <!-- Left: Upload Panel -->
+          <div class="section-card premium-shadow">
+            <h3 class="card-title-modern"><span>🚀</span> Publish New Resource</h3>
+            <form id="uploadDataForm" class="modern-form" onsubmit="handleDataUpload(event)">
+              <div class="form-group-modern">
+                <label>Resource Title</label>
+                <input type="text" id="dataTitle" placeholder="e.g. B.Tech Semester Schedule 2024" required />
+              </div>
+
+              <div class="form-group-modern">
+                <label>Brief Description</label>
+                <textarea id="dataDesc" placeholder="Describe the contents or importance of this file..." rows="3"></textarea>
+              </div>
+
+              <div class="form-row-modern">
+                <div class="form-group-modern">
+                  <label>Category</label>
+                  <select id="dataCategory">
+                    <option>General</option>
+                    <option>Academic</option>
+                    <option>Notice</option>
+                    <option>Exam</option>
+                    <option>Placement</option>
+                  </select>
+                </div>
+                <div class="form-group-modern">
+                  <label>Target Audience (Branch)</label>
+                  <select id="dataBranch">
+                    <option>All</option>
+                    <option>CSE</option><option>CSE-AI</option><option>CSE-AIML</option><option>CSE-DS</option>
+                    <option>ECE</option><option>IT</option><option>EEE</option>
+                  </select>
+                </div>
+                <div class="form-group-modern">
+                  <label>Data Type (Category)</label>
+                  <select id="dataRole">
+                    <option value="Students">Students</option>
+                    <option value="Faculty">Faculty</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group-modern">
+                 <label>File Attachment</label>
+                 <div class="modern-drop-zone" id="dataFileDropZone" onclick="document.getElementById('dataFileField').click()" ondrop="handleDataDrop(event)" ondragover="event.preventDefault(); this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')">
+                    <div class="drop-illu">📁</div>
+                    <p class="drop-txt">Drag & Drop or <span>Click to Browse</span></p>
+                    <p class="drop-sub">PDF, Images, or Documents (Max 10MB)</p>
+                    <div id="fileSelectedLabel" class="selected-badge hidden">No file selected</div>
+                    <input type="file" id="dataFileField" required hidden onchange="updateFileLabel(this)" />
+                 </div>
+              </div>
+
+              <button type="submit" class="btn-premium-action" id="dataUploadBtn">
+                <span class="btn-content">⚡ Upload & Publish to Portal</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Right: Status / Recent -->
+          <div class="section-card premium-shadow" style="display: flex; flex-direction: column;">
+            <div class="card-header-modern">
+               <h3 class="card-title-modern"><span>📑</span> Asset Management</h3>
+            </div>
+            <div id="adminDataFileList" class="modern-file-list">
+              <div class="loading-state-modern">
+                 <div class="spinner-small"></div>
+                 Synchronizing data files...
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ── Dashboard ── -->
+      <section id="section-admDashboard" class="content-section active">
+        <div class="stats-row">
+          <div class="stat-card blue">
+            <div class="stat-num" id="dTotalStudents">–</div>
+            <div class="stat-lbl">Total Students</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-num" id="dActiveStudents">–</div>
+            <div class="stat-lbl">Active Students</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-num" id="dTotalResults">–</div>
+            <div class="stat-lbl">Result Records</div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-num" id="dPassCount">–</div>
+            <div class="stat-lbl">Passed</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-num" id="dFailCount">–</div>
+            <div class="stat-lbl">Failed</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="section-card">
+            <h2 class="card-title">Quick Actions</h2>
+            <div class="quick-actions">
+              <button class="quick-btn" onclick="adminShowSection('admUploadResults', document.querySelector('[onclick*=admUploadResults]'))">
+                📥 Upload Results Excel
+              </button>
+              <button class="quick-btn" onclick="adminShowSection('admUploadStudents', document.querySelector('[onclick*=admUploadStudents]'))">
+                📤 Upload Students Excel
+              </button>
+              <button class="quick-btn" onclick="adminShowSection('admAddStudent', document.querySelector('[onclick*=admAddStudent]'))">
+                ➕ Add Single Student
+              </button>
+              <button class="quick-btn" onclick="bulkClearData()" style="border-color: var(--danger); color: var(--danger); font-weight: 700;">
+                ⚠️ Clear Database
+              </button>
+              <button class="quick-btn" onclick="clearAllChats()" style="border-color: #9333ea; color: #9333ea; font-weight: 700;">
+                💬 Clear All Chats
+              </button>
+            </div>
+          </div>
+          <div class="section-card">
+            <h2 class="card-title">Excel Format Guide</h2>
+            <p class="format-hint">Results Excel must have these columns:</p>
+            <div class="format-table table-wrap">
+              <table class="data-table" style="min-width: 600px;">
+                <tr><th>Column Name</th><th>Example</th></tr>
+                <tr><td>Roll Number</td><td>21CS001</td></tr>
+                <tr><td>Student Name</td><td>Arjun Sharma</td></tr>
+                <tr><td>Branch</td><td>CSE</td></tr>
+                <tr><td>Year</td><td>3</td></tr>
+                <tr><td>Semester</td><td>5</td></tr>
+                <tr><td>Section</td><td>A</td></tr>
+                <tr><td>Exam Type</td><td>Regular</td></tr>
+                <tr><td>Academic Year</td><td>2023-24</td></tr>
+                <tr><td>Subject Code</td><td>CS501</td></tr>
+                <tr><td>Subject Name</td><td>Data Structures</td></tr>
+                <tr><td>Internal</td><td>28</td></tr>
+                <tr><td>External</td><td>65</td></tr>
+                <tr><td>Max Marks</td><td>100</td></tr>
+                <tr><td>Credits</td><td>3</td></tr>
+              </table>
+            </div>
+            <p class="format-note">💡 One row per subject. Same roll number with multiple rows = multiple subjects grouped automatically.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Students List ── -->
+      <section id="section-admStudents" class="content-section">
+        <div class="toolbar">
+          <input type="text" id="stuSearch" placeholder="🔍 Search by name or roll..." class="search-input" oninput="loadStudents()"/>
+          <select id="stuBranch" onchange="loadStudents()" class="filter-select">
+            <option value="">All Branches</option>
+            <option>CSE</option><option>CSE-AI</option><option>AIML</option><option>CSE-DS</option>
+            <option>ECE</option><option>EEE</option>
+            <option>MECH</option><option>CIVIL</option><option>IT</option>
+          </select>
+          <select id="stuYear" onchange="loadStudents()" class="filter-select">
+            <option value="">All Years</option>
+            <option value="1">Year 1</option><option value="2">Year 2</option>
+            <option value="3">Year 3</option><option value="4">Year 4</option>
+          </select>
+        </div>
+        <div class="section-card table-card">
+          <div id="studentsTableWrap" class="table-wrap">
+            <div class="loading-state">Loading students…</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Upload Students ── -->
+      <section id="section-admUploadStudents" class="content-section">
+        <div class="section-card upload-card">
+          <h2 class="card-title">📤 Upload Students via Excel</h2>
+          <p class="upload-hint">Excel must have: <strong>Roll Number, Name, Email, Password, Branch, Year, Section, Phone, Father Name, DOB</strong></p>
+          <div class="drop-zone" id="stuDropZone" ondrop="handleDrop(event,'stuFile')" ondragover="event.preventDefault()" ondragleave="removeDragOver('stuDropZone')" ondragenter="addDragOver('stuDropZone')">
+            <div class="drop-icon">📁</div>
+            <p>Drag & drop your Excel file here</p>
+            <p class="drop-sub">or click to browse</p>
+            <input type="file" id="stuFile" accept=".xlsx,.xls" style="display:none" onchange="handleStudentUpload()"/>
+            <button class="btn-browse" onclick="document.getElementById('stuFile').click()">Browse File</button>
+          </div>
+          <div id="stuUploadProgress" class="hidden">
+            <div class="progress-bar-wrap"><div class="progress-bar" id="stuProgressBar"></div></div>
+            <p id="stuUploadStatus">Uploading…</p>
+          </div>
+        <div id="stuUploadResult" class="upload-result hidden"></div>
+        </div>
+
+        <!-- 📜 Student Upload History -->
+        <div class="section-card">
+          <h2 class="card-title">📜 Student Upload History</h2>
+          <div id="stuHistoryContainer" class="table-wrap">
+            <p style="text-align:center; padding: 2rem;">Loading history...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Results List ── -->
+      <section id="section-admResults" class="content-section">
+        <div class="toolbar">
+          <select id="resBranch" onchange="loadAdminResults()" class="filter-select">
+            <option value="">All Branches</option>
+            <option>CSE</option><option>CSE-AI</option><option>AIML</option><option>CSE-DS</option>
+            <option>ECE</option><option>EEE</option>
+            <option>MECH</option><option>CIVIL</option><option>IT</option>
+          </select>
+          <select id="resSemester" onchange="loadAdminResults()" class="filter-select">
+            <option value="">All Semesters</option>
+            <option value="1">Sem 1</option><option value="2">Sem 2</option>
+            <option value="3">Sem 3</option><option value="4">Sem 4</option>
+            <option value="5">Sem 5</option><option value="6">Sem 6</option>
+            <option value="7">Sem 7</option><option value="8">Sem 8</option>
+          </select>
+          <select id="resExam" onchange="loadAdminResults()" class="filter-select">
+            <option value="">All Exam Types</option>
+            <option>Regular</option><option>Supplementary</option><option>Improvement</option>
+          </select>
+        </div>
+        <div class="section-card table-card">
+          <div id="resultsTableWrap" class="table-wrap">
+            <div class="loading-state">Loading results…</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Upload Results ── -->
+      <section id="section-admUploadResults" class="content-section">
+        <div class="section-card upload-card">
+          <h2 class="card-title">📥 Upload Results via Excel</h2>
+          
+          <div class="upload-options" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+                <label>Target Semester</label>
+                <select id="uploadResSem" class="filter-select" style="width:100%">
+                    <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                    <option value="3">Semester 3</option><option value="4">Semester 4</option>
+                    <option value="5">Semester 5</option><option value="6">Semester 6</option>
+                    <option value="7">Semester 7</option><option value="8">Semester 8</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Exam Category</label>
+                <select id="uploadResType" class="filter-select" style="width:100%" onchange="updateUploadSubTypes()">
+                    <option value="Internal">Internal (Mid/Assign)</option>
+                    <option value="External">External (Regular/Supply)</option>
+                </select>
+            </div>
+            <div class="form-group" id="uploadSubWrapper">
+                <label id="uploadSubLabel">Internal Type</label>
+                <select id="uploadResSub" class="filter-select" style="width:100%">
+                    <option value="Mid-1">Mid-1 Exam</option>
+                    <option value="Mid-2">Mid-2 Exam</option>
+                    <option value="Assignment">Assignment</option>
+                </select>
+            </div>
+          </div>
+
+          <p class="upload-hint">Upload results for the selected category above.</p>
+          <div class="drop-zone" id="resDropZone" ondrop="handleDrop(event,'resFile')" ondragover="event.preventDefault()" ondragleave="removeDragOver('resDropZone')" ondragenter="addDragOver('resDropZone')">
+            <div class="drop-icon">📊</div>
+            <p>Drag & drop your Results Excel here</p>
+            <p class="drop-sub">or click to browse (.xlsx / .xls)</p>
+            <input type="file" id="resFile" accept=".xlsx,.xls" style="display:none" onchange="handleResultUpload()"/>
+            <button class="btn-browse" onclick="document.getElementById('resFile').click()">Browse File</button>
+          </div>
+          <div id="resUploadProgress" class="hidden">
+            <div class="progress-bar-wrap"><div class="progress-bar" id="resProgressBar"></div></div>
+            <p id="resUploadStatus">Uploading…</p>
+          </div>
+          <div id="resUploadResult" class="upload-result hidden"></div>
+        </div>
+
+        <!-- 📜 Results Upload History -->
+        <div class="section-card">
+          <h2 class="card-title">📜 Results Upload History</h2>
+          <div id="resHistoryContainer" class="table-wrap">
+            <p style="text-align:center; padding: 2rem;">Loading history...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Add Single Student ── -->
+      <section id="section-admAddStudent" class="content-section">
+        <div class="section-card form-card">
+          <h2 class="card-title">➕ Add New Student</h2>
+          <form id="addStudentForm" onsubmit="submitAddStudent(event)" class="add-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Roll Number *</label>
+                <input type="text" name="rollNumber" placeholder="e.g. 21CS001" required/>
+              </div>
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" name="name" placeholder="Student full name" required/>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email *</label>
+                <input type="email" name="email" placeholder="student@college.edu" required/>
+              </div>
+              <div class="form-group">
+                <label>Password *</label>
+                <input type="text" name="password" placeholder="Default: roll number" required/>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Branch *</label>
+                <select name="branch" required>
+                  <option value="">Select Branch</option>
+                  <option>CSE</option><option>CSE-AI</option><option>AIML</option><option>CSE-DS</option>
+                  <option>ECE</option><option>EEE</option>
+                  <option>MECH</option><option>CIVIL</option><option>IT</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Year *</label>
+                <select name="year" required>
+                  <option value="">Select Year</option>
+                  <option value="1">Year 1</option><option value="2">Year 2</option>
+                  <option value="3">Year 3</option><option value="4">Year 4</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Section</label>
+                <input type="text" name="section" placeholder="A" maxlength="2"/>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Phone</label>
+                <input type="text" name="phone" placeholder="10-digit phone"/>
+              </div>
+              <div class="form-group">
+                <label>Father's Name</label>
+                <input type="text" name="fatherName" placeholder="Father's name"/>
+              </div>
+              <div class="form-group">
+                <label>Date of Birth</label>
+                <input type="date" name="dob"/>
+              </div>
+            </div>
+            <div id="addStudentMsg" class="hidden"></div>
+            <button type="submit" class="btn-submit">➕ Add Student</button>
+        </div>
+      </section>
+
+      <!-- ── Admin Chat Support ── -->
+      <section id="section-admChat" class="content-section">
+        <div style="display: grid; grid-template-columns: 350px 1fr; gap: 1.5rem; height: 75vh;">
+          <!-- Left: Student List -->
+          <div class="section-card" style="padding:0; overflow-y:auto">
+            <h3 style="padding: 1.5rem; margin: 0; border-bottom: 1px solid var(--border)">Active Chats</h3>
+            <div id="adminChatList">
+              <p style="padding: 2rem; text-align:center">No active chats.</p>
+            </div>
+          </div>
+          <!-- Right: Chat Area -->
+          <div class="section-card chat-container" id="adminChatArea" style="visibility: hidden">
+            <div class="modal-header" style="padding:1rem 1.5rem">
+              <strong id="activeChatStudent">Select a student</strong>
+            </div>
+            <div class="chat-messages" id="adminChatMsgs"></div>
+            <div id="adminChatReplyPreview"></div>
+            <div class="chat-input-area">
+              <input type="text" id="adminChatInput" placeholder="Reply to student..." onkeypress="if(event.key==='Enter') sendAdminChat()"/>
+              <button class="btn-primary" onclick="sendAdminChat()">Reply</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Admin Profile ── -->
+      <section id="section-admProfile" class="content-section">
+        <div class="section-card" style="max-width: 600px; margin: 0 auto;">
+          <h2 class="card-title">👤 Admin Profile Settings</h2>
+          <p class="format-hint">Update your administrative credentials here.</p>
+          
+          <form id="adminProfileForm" class="auth-form" style="margin-top: 2rem;">
+            <div class="form-group">
+              <label>Administrator Username</label>
+              <input type="text" id="admUsername" placeholder="Enter new username" required/>
+            </div>
+            <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--border);"/>
+            <h3>Change Password</h3>
+            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 1rem;">Leave new password blank if you don't want to change it.</p>
+            
+            <div class="form-group">
+              <label>Current Password</label>
+              <input type="password" id="admOldPassword" placeholder="Required for password change"/>
+            </div>
+            <div class="form-group">
+              <label>New Password</label>
+              <input type="password" id="admNewPassword" placeholder="Enter new password"/>
+            </div>
+            
+            <div id="admProfileMsg" class="hidden" style="margin: 1rem 0; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;"></div>
+            
+            <button type="submit" class="btn-submit" style="margin-top: 1rem;" onclick="handleAdminProfileUpdate(event)">Update Profile</button>
+          </form>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ── Clear Data Modal ── -->
+  <div id="clearDataModal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width: 500px">
+      <div class="modal-header">
+        <h2 style="color: var(--danger)">⚠️ Dangerous Action</h2>
+        <button class="modal-close" onclick="closeClearModal()">×</button>
+      </div>
+      <div style="padding: 2rem; text-align: center">
+        <p>What would you like to clear from the database? <br/><strong>This action cannot be undone.</strong></p>
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem;">
+          <button class="btn-submit" style="background: #9333ea" onclick="confirmDelete('results')">🗑️ Clear ALL Results</button>
+          <button class="btn-submit" style="background: #dc2626" onclick="confirmDelete('students')">👥 Clear ALL Students</button>
+          <button class="btn-submit" style="background: #0f172a" onclick="confirmDelete('all')">💥 CLEAR EVERYTHING</button>
+          <button class="btn-secondary" onclick="closeClearModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
