@@ -87,17 +87,17 @@ router.post('/upload-students', isAdmin, upload.single('file'), async (req, res)
 
     for (const row of data) {
       try {
-        const rollRaw = findVal(row, ['Admissionno', 'Roll Number', 'Roll No', 'RollNo', 'HTNO', 'HT No', 'Student ID', 'Admission No', 'Adm No', 'Reg No', 'RegNo', 'Student ID']);
-        const nameRaw = findVal(row, ['name', 'Student Name', 'Full Name', 'StudentName', 'Name of the Student']);
-        const emailRaw= findVal(row, ['studentemail', 'Email', 'Email ID', 'Student Email', 'Mail ID']);
+        const rollRaw = findVal(row, ['HallTicketNo', 'Admissionno', 'Roll Number', 'Roll No', 'RollNo', 'HTNO', 'HT No', 'Student ID', 'Reg No']);
+        const nameRaw = findVal(row, ['StudentName', 'name', 'Student Name', 'Full Name', 'StudentName', 'Name of the Student']);
+        const emailRaw= findVal(row, ['StudentEmail', 'studentemail', 'Email', 'Email ID', 'Student Email', 'Mail ID']);
         
         const rollNumber = String(rollRaw || '').trim().toUpperCase();
         if (!rollNumber) continue;
 
         const name      = String(nameRaw || 'Student').trim();
         const email     = String(emailRaw || '').trim().toLowerCase() || `${rollNumber.toLowerCase()}@college.edu`;
-        const branch    = String(findVal(row, ['branchname', 'Branch', 'Dept']) || 'CSE').trim();
-        const year      = parseInt(findVal(row, ['batch', 'Year']) || 1);
+        const branch    = String(findVal(row, ['BranchName', 'branchname', 'Branch', 'Dept']) || 'CSE').trim();
+        const year      = parseInt(findVal(row, ['Semester', 'batch', 'Year']) || 1);
         
         const updateData = {
           name, 
@@ -105,9 +105,9 @@ router.post('/upload-students', isAdmin, upload.single('file'), async (req, res)
           branch, 
           year,
           uploadId: history._id,
-          phone: String(findVal(row, ['Phone', 'Mobile']) || '').trim(),
-          fatherName: String(findVal(row, ['Father Name']) || '').trim(),
-          dob: String(findVal(row, ['DOB']) || '').trim()
+          phone: String(findVal(row, ['StudMobile', 'Phone', 'Mobile']) || '').trim(),
+          fatherName: String(findVal(row, ['FatherName', 'Father Name']) || '').trim(),
+          dob: String(findVal(row, ['DateOfBirth', 'DOB']) || '').trim()
         };
 
         const existing = await Student.findOne({ rollNumber });
