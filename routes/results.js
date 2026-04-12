@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Result = require('../models/Result');
 const Student = require('../models/Student');
+const DataFile = require('../models/DataFile');
 
 // ─── Student Auth Middleware (With Timer Enforcement) ──────────────────────────
 const isStudent = async (req, res, next) => {
@@ -123,15 +124,12 @@ router.get('/student-info/:rollNumber', isStudent, async (req, res) => {
 router.get('/data/search/:htno', async (req, res) => {
     try {
         const htno = req.params.htno.toUpperCase();
-        const DataFile = require('../models/DataFile');
         const files = await DataFile.find({ isSpreadsheet: true });
         
         let foundRecords = [];
         
         files.forEach(file => {
-            // Search each row of the excel data
             const match = file.excelData.find(row => {
-                // Look for common HTNO column names
                 const val = (row['Htno'] || row['HTNO'] || row['HallTicketNo'] || row['Admissionno'] || row['Roll Number'] || row['RollNo'] || '');
                 return String(val).trim().toUpperCase() === htno;
             });
@@ -151,7 +149,7 @@ router.get('/data/search/:htno', async (req, res) => {
 
 router.get('/data/files/:id', async (req, res) => {
     try {
-        const file = await require('../models/DataFile').findById(req.params.id);
+        const file = await DataFile.findById(req.params.id);
         if (!file) return res.status(404).json({ success: false });
         res.json({ success: true, file });
     } catch (err) { res.status(500).json({ success: false }); }

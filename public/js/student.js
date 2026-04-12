@@ -898,26 +898,37 @@ async function handleHtnoSearch() {
         
         if (data.success && data.records.length > 0) {
             infoBox.innerHTML = `
-                <div style="margin-bottom: 2rem;">
-                    <h3 style="color:var(--secondary); font-size: 1rem; margin-bottom: 1rem;">🔎 Found ${data.records.length} records in Institutional Datasets:</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                <div style="margin-bottom: 3rem;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;">
+                        <span style="font-size: 1.5rem;">📁</span>
+                        <h3 style="color:var(--secondary); font-size: 1.1rem; margin:0;">Personalized Records Hub</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
                         ${data.records.map(r => `
-                            <div class="section-card" style="flex-direction: column; align-items: flex-start; padding: 1.25rem; border-top: 4px solid #10b981; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                                <div style="display:flex; justify-content:space-between; width:100%; margin-bottom: 0.5rem;">
-                                    <span style="font-size: 0.7rem; font-weight: 800; color: #059669; text-transform: uppercase;">${r.sourceCategory}</span>
-                                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--secondary);">${r.sourceTitle}</span>
+                            <div class="section-card" style="flex-direction: column; align-items: flex-start; padding: 1.5rem; border-left: 6px solid #10b981; background: #ffffff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border-radius: 16px;">
+                                <div style="display:flex; justify-content:space-between; align-items: center; width:100%; margin-bottom: 1.25rem;">
+                                    <div style="display:flex; flex-direction: column;">
+                                        <span style="font-size: 0.65rem; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.05em;">${r.sourceCategory}</span>
+                                        <span style="font-size: 1rem; font-weight: 800; color: var(--secondary);">${r.sourceTitle}</span>
+                                    </div>
+                                    <div style="background: #ecfdf5; padding: 8px; border-radius: 50%; color: #10b981;">📊</div>
                                 </div>
-                                <div style="width:100%; font-size: 0.85rem;">
+                                <div style="width:100%; display: flex; flex-direction: column; gap: 8px;">
                                     ${Object.entries(r.data).map(([key, val]) => `
-                                        <div style="display:flex; justify-content:space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
-                                            <span style="color: #64748b; font-weight: 600;">${key}</span>
-                                            <span style="color: var(--secondary); font-weight: 700;">${val}</span>
+                                        <div style="display:flex; justify-content:space-between; align-items: center; padding: 8px 12px; background: #f8fafc; border-radius: 8px;">
+                                            <span style="color: #64748b; font-weight: 600; font-size: 0.75rem;">${key}</span>
+                                            <span style="color: var(--secondary); font-weight: 700; font-size: 0.85rem;">${val}</span>
                                         </div>
                                     `).join('')}
+                                </div>
+                                <div style="margin-top: 1.25rem; width: 100%; text-align: right;">
+                                    <span style="font-size: 0.7rem; color: #94a3b8; font-style: italic;">Verified Database Entry</span>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
+                    <hr style="margin: 3rem 0; border: 0; border-top: 2px dashed #e2e8f0;"/>
+                    <h3 style="color:var(--secondary); font-size: 1rem; margin-bottom: 1.5rem;">📂 Related Institutional Files:</h3>
                 </div>
             `;
         } else {
