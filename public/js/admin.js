@@ -1158,18 +1158,17 @@ async function handleDataUpload(e) {
     const btn = document.getElementById('dataUploadBtn');
     const fileField = document.getElementById('dataFileField');
     
-    if (!fileField.files[0]) {
-        alert("Please select a file to upload.");
-        return;
-    }
+    const file = fileField.files[0];
+    const titleVal = document.getElementById('dataTitle').value.trim() || file.name.split('.')[0];
+    const descVal = document.getElementById('dataDesc').value.trim() || 'Institutional document';
 
     const formData = new FormData();
-    formData.append('title', document.getElementById('dataTitle').value);
-    formData.append('description', document.getElementById('dataDesc').value);
+    formData.append('title', titleVal);
+    formData.append('description', descVal);
     formData.append('category', document.getElementById('dataCategory').value);
     formData.append('branch', document.getElementById('dataBranch').value);
     formData.append('role', document.getElementById('dataRole').value);
-    formData.append('file', fileField.files[0]);
+    formData.append('file', file);
 
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner-small" style="margin:0 auto"></div>';
