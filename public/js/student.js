@@ -971,25 +971,55 @@ async function loadStudentDataFiles() {
 
             container.innerHTML = `
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
-                    ${data.files.map(f => `
-                        <div class="section-card result-history-item" style="flex-direction: column; align-items: flex-start; gap: 1rem; border-left: 5px solid var(--primary);">
+                    ${data.files.map(f => {
+                      const isSpreadsheet = f.isSpreadsheet && f.excelData && f.excelData.length > 0;
+                      return `
+                        <div class="section-card result-history-item" style="flex-direction: column; align-items: flex-start; gap: 1rem; border-left: 5px solid ${isSpreadsheet ? '#10b981' : 'var(--primary)'};">
                             <div style="width: 100%;">
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                    <span class="grade-badge" style="background: var(--primary-light); color: var(--primary); font-size: 0.65rem;">${f.category}</span>
+                                    <span class="grade-badge" style="background: ${isSpreadsheet ? '#dcfce7' : 'var(--primary-light)'}; color: ${isSpreadsheet ? '#15803d' : 'var(--primary)'}; font-size: 0.65rem;">
+                                        ${isSpreadsheet ? '📊 SPREADSHEET' : f.category}
+                                    </span>
                                     <small style="color: grey;">${new Date(f.uploadedAt).toLocaleDateString()}</small>
                                 </div>
                                 <h3 style="margin: 0.5rem 0 0.25rem 0; font-size: 1.1rem; color: var(--secondary)">${f.title}</h3>
-                                <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.4;">${f.description || 'Institutional document'}</p>
+                                <p style="margin: 0; font-size: 0.85rem; color: #64748b; line-height: 1.4;">${f.description || (isSpreadsheet ? 'Interactive spreadsheet data' : 'Institutional document')}</p>
                             </div>
+                            
+                            <!-- ── Spreadsheet Preview (Table) ── -->
+                            ${isSpreadsheet ? `
+                                <div style="width: 100%; max-height: 150px; overflow: hidden; position: relative; background: #fafafa; border-radius: 8px; border: 1px solid #f1f5f9; padding: 5px;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 0.65rem;">
+                                        <thead>
+                                            <tr style="background: #f1f5f9;">
+                                                ${Object.keys(f.excelData[0]).slice(0, 3).map(k => `<th style="padding: 4px; text-align: left;">${k}</th>`).join('')}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${f.excelData.slice(0, 3).map(row => `
+                                                <tr>
+                                                    ${Object.values(row).slice(0, 3).map(v => `<td style="padding: 4px; border-top: 1px solid #eaeef2;">${v}</td>`).join('')}
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, #fafafa);"></div>
+                                </div>
+                            ` : ''}
+
                             <div style="width: 100%; padding-top: 1rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <span style="font-size: 1.2rem;">📄</span>
+                                    <span style="font-size: 1.2rem;">${isSpreadsheet ? '📊' : '📄'}</span>
                                     <span style="font-size: 0.75rem; color: grey;">${f.originalName}</span>
                                 </div>
-                                <a href="${f.path}" target="_blank" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; text-decoration: none; border-radius: 6px;">View</a>
+                                ${isSpreadsheet ? 
+                                    `<button onclick="viewExcelTable('${f._id}')" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; border-radius: 6px; background: #10b981; border: none;">Open Dataset</button>` :
+                                    `<a href="${f.path}" target="_blank" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; text-decoration: none; border-radius: 6px;">View</a>`
+                                }
                             </div>
                         </div>
-                    `).join('')}
+                      `;
+                    }).join('')}
                 </div>
             `;
         }
@@ -1047,6 +1077,50 @@ document.addEventListener('click', (e) => {
         document.querySelectorAll('.msg-menu').forEach(m => m.style.display = 'none');
     }
 });
+async function viewExcelTable(fileId) {
+    try {
+        const res = await fetch(`/api/results/data/files/${fileId}`);
+        const data = await res.json();
+        if (data.success && data.file.excelData.length > 0) {
+            const f = data.file;
+            const rows = f.excelData;
+            const headers = Object.keys(rows[0]);
+
+            const modal = document.getElementById('modalContent');
+            modal.innerHTML = `
+                <div style="padding: 1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+                        <div>
+                            <h2 style="margin:0; color:var(--secondary); font-size: 1.5rem;">📊 ${f.title}</h2>
+                            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.9rem;">${f.description || 'Institutional Dataset'}</p>
+                        </div>
+                        <button onclick="closeModal()" style="background:#f1f5f9; border:none; width:40px; height:40px; border-radius:10px; cursor:pointer; font-size:1.2rem;">✕</button>
+                    </div>
+
+                    <div style="overflow-x:auto; background:white; border:1px solid #e2e8f0; border-radius:12px; max-height: 60vh;">
+                        <table style="width:100%; border-collapse:collapse; min-width:800px;">
+                            <thead>
+                                <tr style="background:#f8fafc; border-bottom: 2px solid #e2e8f0;">
+                                    ${headers.map(h => `<th style="padding:15px; text-align:left; font-size:0.75rem; font-weight:800; color:#475569; position:sticky; top:0; background:#f8fafc;">${h.toUpperCase()}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows.map((row, i) => `
+                                    <tr style="background:${i%2===0?'#fff':'#fcfdfe'}; border-bottom:1px solid #f1f5f9;">
+                                        ${headers.map(h => `<td style="padding:12px 15px; font-size:0.85rem; color:#1e293b;">${row[h] || '--'}</td>`).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.getElementById('resultModal').classList.remove('hidden');
+        }
+    } catch (e) {
+        alert("Could not load data table.");
+    }
+}
 async function lookupStudentInfo() {
     const roll = document.getElementById('lookupRoll').value.trim().toUpperCase();
     const resultBox = document.getElementById('lookupResult');

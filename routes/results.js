@@ -120,4 +120,12 @@ router.get('/student-info/:rollNumber', isStudent, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false }); }
 });
 
+router.get('/data/files/:id', async (req, res) => {
+    try {
+        const file = await require('../models/DataFile').findById(req.params.id);
+        if (!file) return res.status(404).json({ success: false });
+        res.json({ success: true, file });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
 module.exports = router;

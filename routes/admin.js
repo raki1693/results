@@ -511,8 +511,18 @@ router.delete('/bulk/clear/:target', isAdmin, async (req, res) => {
 // ─── DATA UPLOAD ROUTES ───────────────────────────────────────────────────────
 router.post('/upload-data', isAdmin, dataUpload.single('file'), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ success: false, message: 'No file selected' });
-    const { title, description, category, branch, role } = req.body;
+    const isExcel = req.file.originalname.match(/\.(xlsx|xls)$/i);
+    let excelData = [];
+    
+    if (isExcel) {
+      try {
+        const workbook = XLSX.readFile(req.file.path);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        excelData = XLSX.utils.sheet_to_json(sheet);
+      } catch (e) {
+        console.error("Excel Parsing Error:", e);
+      }
+    }
 
     const dataFile = new DataFile({
       title,
@@ -523,15 +533,17 @@ router.post('/upload-data', isAdmin, dataUpload.single('file'), async (req, res)
       filename: req.file.filename,
       originalName: req.file.originalname,
       path: `/uploads/${req.file.filename}`,
+      isSpreadsheet: !!isExcel,
+      excelData,
       uploadedBy: req.session.admin.username
     });
 
     await dataFile.save();
     
     // Notify students
-    req.app.get('io').emit('results_updated', { message: 'New institutional data uploaded' });
+    req.app.get('io').emit('results_updated', { message: 'New institutional dataset published' });
 
-    res.json({ success: true, message: 'File uploaded successfully!' });
+    res.json({ success: true, message: isExcel ? 'Excel Dataset published!' : 'File uploaded successfully!' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

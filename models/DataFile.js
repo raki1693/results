@@ -8,7 +8,9 @@ const dataFileSchema = new mongoose.Schema({
   originalName: { type: String, required: true },
   path: { type: String, required: true },
   branch: { type: String, default: 'All' },
-  role: { type: String, default: 'Students' }, // New: Students or Faculty
+  role: { type: String, default: 'Students' }, // Students or Faculty
+  isSpreadsheet: { type: Boolean, default: false },
+  excelData: { type: Array, default: [] },
   uploadedBy: { type: String, required: true },
   uploadedAt: { type: Date, default: Date.now }
 });
