@@ -407,7 +407,7 @@ async function loadAdminResults() {
                                 <td><strong>${r.rollNumber}</strong></td>
                                 <td>${r.studentName}</td>
                                 <td>Sem ${formatSem(r.semester)}</td>
-                                <td>${r.examType}</td>
+                                <td>${r.examType} ${r.examSession ? `<small style="display:block;color:#64748b">(${r.examSession})</small>` : ''}</td>
                                 <td>${r.sgpa}</td>
                                 <td><span class="status-pill ${r.result === 'Pass' ? 'active' : 'inactive'}">${r.result}</span></td>
                                 <td>
@@ -507,11 +507,13 @@ async function handleResultUpload() {
 
     const sem = document.getElementById('uploadResSem').value;
     const type = document.getElementById('uploadResSub').value;
+    const session = document.getElementById('uploadResSession').value.trim();
 
     const formData = new FormData();
     formData.append('file', fileInput.files[0]);
     formData.append('semester', sem);
     formData.append('examType', type);
+    formData.append('examSession', session);
 
     const progressWrap = document.getElementById('resUploadProgress');
     const progressBar = document.getElementById('resProgressBar');

@@ -280,7 +280,7 @@ function renderOverview() {
                     <span class="sem-stat-lbl">Percentage</span>
                 </div>
                 <div class="sem-stat-item">
-                    <span class="sem-stat-val">${res.examType}</span>
+                    <span class="sem-stat-val">${res.examType}${res.examSession ? ` (${res.examSession})` : ''}</span>
                     <span class="sem-stat-lbl">Exam</span>
                 </div>
             </div>
@@ -501,7 +501,7 @@ async function viewResultDetail(id) {
                         </div>
                         <p style="margin:0;color:rgba(255,255,255,0.75);font-size:0.82rem">
                             ${isInternal ? 'Internal Assessment' : 'Examination'} Result Card &nbsp;·&nbsp;
-                            Semester ${formatSem(r.semester)} &nbsp;·&nbsp; ${r.examType}
+                            Semester ${formatSem(r.semester)} &nbsp;·&nbsp; ${r.examType}${r.examSession ? ` (${r.examSession})` : ''}
                         </p>
                     </div>
                     <div style="display:flex;align-items:center;gap:1rem">

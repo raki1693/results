@@ -173,11 +173,12 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
       const rollNumber   = String(findVal(row, ['Admissionno', 'Roll Number', 'RollNo', 'ID']) || '').trim().toUpperCase();
       const semester     = req.body.semester ? parseInt(req.body.semester) : parseNum(findVal(row, ['semester', 'Sem']));
       const examType     = req.body.examType || String(findVal(row, ['program name', 'Exam Type', 'ExamType']) || 'Regular').trim();
+      const examSession  = req.body.examSession || String(findVal(row, ['Exam Session', 'Session', 'MonthYear']) || '').trim();
       const academicYear = String(findVal(row, ['Ac year', 'Academic Year', 'AY']) || '2023-24').trim();
       
       if (!rollNumber) continue;
 
-      const key = `${rollNumber}_${semester}_${examType}_${academicYear}`;
+      const key = `${rollNumber}_${semester}_${examType}_${examSession}_${academicYear}`;
       
       if (!grouped[key]) {
         grouped[key] = {
@@ -188,6 +189,7 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
           semester,
           section: 'A',
           examType,
+          examSession,
           academicYear,
           subjects: []
         };

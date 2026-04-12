@@ -23,6 +23,7 @@ const resultSchema = new mongoose.Schema({
   semester: { type: Number, required: true },
   section: { type: String, default: 'A' },
   examType: { type: String, default: 'Regular' },
+  examSession: { type: String, default: '' }, // e.g., "Nov 2023" or "Attempt 1"
   academicYear: { type: String, required: true }, // e.g., "2023-24"
   subjects: [subjectSchema],
   totalMarksObtained: { type: Number, default: 0 },
@@ -38,7 +39,7 @@ const resultSchema = new mongoose.Schema({
   uploadId: { type: mongoose.Schema.Types.ObjectId, ref: 'UploadHistory' }
 });
 
-// Compound unique index: one result per student per semester per exam
-resultSchema.index({ rollNumber: 1, semester: 1, examType: 1, academicYear: 1 }, { unique: true });
+// Compound unique index: allows multiple attempts via examSession
+resultSchema.index({ rollNumber: 1, semester: 1, examType: 1, examSession: 1, academicYear: 1 }, { unique: true });
 
 module.exports = mongoose.model('Result', resultSchema);
