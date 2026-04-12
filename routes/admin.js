@@ -455,7 +455,7 @@ router.delete('/bulk/clear/:target', isAdmin, async (req, res) => {
 });
 
 // ─── DATA UPLOAD ROUTES ───────────────────────────────────────────────────────
-router.post('/upload-data', isAdmin, dataUpload.single('file'), async (req, res) => {
+router.post('/data-upload', isAdmin, dataUpload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file selected' });
     
