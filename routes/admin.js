@@ -206,8 +206,8 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
           const obj  = parseNum(findVal(row, [`Course${i}ObjectiveMarks`, `Course${i}Objective Marks`]));
 
           if (name) {
-            const total = desc + assn + obj;
-            const max = 40; // Institutional Mid Default
+            const total = desc + assn; // 🎯 STRICT CALCULATION: Total = DESC + ASSN
+            const max = 25; // Adjusted typical Mid Max (15 Desc + 10 Assn)
             subjectsArray.push({
               name,
               code: code || `C0${i}`,

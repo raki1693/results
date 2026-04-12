@@ -584,8 +584,8 @@ async function viewResultDetail(id) {
                             <tr style="background:${i%2===0?'#fff':'#f8fafc'};border-bottom:1px solid #f1f5f9">
                                 <td style="padding:11px 14px;font-size:0.88rem;color:#1e293b">${s.name}</td>
                                 <td style="padding:11px 14px;font-size:0.82rem;font-weight:700;color:#2563eb;text-align:center">${s.code}</td>
-                                <td style="padding:11px 14px;font-size:0.88rem;color:#1e293b;text-align:center">${s.descriptiveMarks || '--'}</td>
-                                <td style="padding:11px 14px;font-size:0.88rem;color:#1e293b;text-align:center">${s.assignmentMarks || '--'}</td>
+                                <td style="padding:11px 14px;font-size:0.88rem;color:#1e293b;text-align:center">${s.descriptiveMarks ?? '--'}</td>
+                                <td style="padding:11px 14px;font-size:0.88rem;color:#1e293b;text-align:center">${(s.assignmentMarks === 0 || s.assignmentMarks) ? s.assignmentMarks : '--'}</td>
                                 <td style="padding:11px 14px;font-size:0.88rem;font-weight:800;color:var(--primary);text-align:center">${s.internalMarks}</td>
                             </tr>` : `
                             <tr style="background:${i%2===0?'#fff':'#f8fafc'};border-bottom:1px solid #f1f5f9">
