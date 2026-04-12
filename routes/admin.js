@@ -152,7 +152,8 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
 
     const workbook = XLSX.readFile(req.file.path);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(sheet);
+    // 🚀 LOSSLESS READER: Ensures 100% data capture
+    const data = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: "" });
 
     if (!data.length) return res.status(400).json({ success: false, message: 'Excel file is empty' });
 

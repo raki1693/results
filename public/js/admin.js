@@ -1344,3 +1344,57 @@ function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('active');
 }
+
+function updateResultsFileLabel(input) {
+    const badge = document.getElementById('resSelectedBadge');
+    if (input.files && input.files[0]) {
+        badge.textContent = `📎 Selected: ${input.files[0].name}`;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+async function handleResultsUpload() {
+    const fileField = document.getElementById('resFile');
+    const btn = document.getElementById('resultsMainUploadBtn');
+    
+    const file = fileField.files[0];
+    if (!file) { alert("Please select an Excel results file first."); return; }
+
+    const sem = document.getElementById('uploadResSem').value;
+    const type = document.getElementById('uploadResType').value;
+    const sub = document.getElementById('uploadResSub') ? document.getElementById('uploadResSub').value : '';
+    const session = document.getElementById('uploadResSession').value;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('semester', sem);
+    formData.append('examType', type);
+    formData.append('examSession', session);
+
+    try {
+        btn.disabled = true;
+        btn.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; gap:10px;"><div class="spinner-small"></div> 🚀 Ingesting Records...</div>`;
+        
+        const res = await fetch('/api/admin/upload-results', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            alert("✅ Results Published Successfully!");
+            fileField.value = '';
+            document.getElementById('resSelectedBadge').classList.add('hidden');
+            if (typeof loadAdminResults === 'function') loadAdminResults();
+        } else {
+            alert("❌ Upload failed: " + (data.message || 'Server error'));
+        }
+    } catch (err) {
+        alert("❌ Error: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `🚀 Upload & Publish Results`;
+    }
+}
