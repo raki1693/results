@@ -1205,31 +1205,4 @@ async function viewExcelTable(fileId) {
         alert("Could not load data table.");
     }
 }
-async function lookupStudentInfo() {
-    const roll = document.getElementById('lookupRoll').value.trim().toUpperCase();
-    const resultBox = document.getElementById('lookupResult');
-    const errorBox = document.getElementById('lookupError');
 
-    if (!roll) { alert("Please enter a Hall Ticket Number."); return; }
-
-    try {
-        const res = await fetch(`/api/results/student-info/${roll}`);
-        const data = await res.json();
-
-        if (data.success) {
-            const s = data.student;
-            document.getElementById('lookupName').textContent = s.name;
-            document.getElementById('lookupRollDisplay').textContent = s.rollNumber;
-            document.getElementById('lookupBranch').textContent = s.branch;
-            document.getElementById('lookupInitial').textContent = s.name.charAt(0);
-            
-            resultBox.classList.remove('hidden');
-            errorBox.classList.add('hidden');
-        } else {
-            resultBox.classList.add('hidden');
-            errorBox.classList.remove('hidden');
-        }
-    } catch (e) {
-        alert("Error connecting to server.");
-    }
-}

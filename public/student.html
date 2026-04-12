@@ -130,9 +130,6 @@
         <a href="#" class="nav-item" data-section="results" onclick="showSection('results', this)">
           <span>📋</span> My Results
         </a>
-        <a href="#" class="nav-item" data-section="lookup" onclick="showSection('lookup', this)">
-          <span>🔍</span> Find Student
-        </a>
         <a href="#" class="nav-item" data-section="data" onclick="showSection('data', this)">
           <span>🗂️</span> DATA
         </a>
@@ -224,34 +221,7 @@
         </div>
       </section>
 
-      <!-- ── Student Lookup Section ── -->
-      <section id="section-lookup" class="content-section">
-        <div class="section-card">
-          <h2 class="card-title">🔍 Student Info Lookup</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Enter a Hall Ticket Number to find student details.</p>
-          
-          <div class="search-box-wrap" style="margin-bottom: 2rem;">
-            <input type="text" id="lookupRoll" class="search-input" placeholder="e.g. 21CS001" style="max-width: 400px; padding: 1rem 1.5rem;"/>
-            <button class="btn-primary" onclick="lookupStudentInfo()" style="padding: 10px 25px;">Search</button>
-          </div>
 
-          <div id="lookupResult" class="hidden">
-            <div style="background: #f8fafc; border-radius: 16px; padding: 2rem; border: 1px solid var(--border); max-width: 500px;">
-                <div style="display:flex; align-items:center; gap: 1.5rem;">
-                    <div style="width:70px;height:70px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800;" id="lookupInitial">
-                        S
-                    </div>
-                    <div>
-                        <h3 id="lookupName" style="margin:0; font-size: 1.25rem;">Student Name</h3>
-                        <p id="lookupRollDisplay" style="margin:4px 0; color: var(--text-muted); font-weight: 600;">ROLL NO</p>
-                        <span id="lookupBranch" style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:100px;font-size:0.75rem;font-weight:700;">BRANCH</span>
-                    </div>
-                </div>
-            </div>
-          </div>
-          <div id="lookupError" class="error-msg hidden" style="margin-top: 1rem;">Student not found.</div>
-        </div>
-      </section>
 
       <!-- ── Profile Section ── -->
       <section id="section-profile" class="content-section">
