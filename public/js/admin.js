@@ -681,10 +681,18 @@ async function loadUploadHistory(type, containerId) {
                                 <td><b>${h.recordsCount}</b></td>
                                 <td>${h.uploadedBy}</td>
                                 <td>
-                                    <button class="btn-secondary" style="background:#fee2e2;color:#b91c1c;border:none;padding:4px 8px;border-radius:6px;cursor:pointer"
-                                        onclick="rollbackUpload('${h._id}','${h.uploadType}','${type}','${containerId}')">
-                                        🗑️ Rollback
-                                    </button>
+                                    <div style="display:flex;gap:5px">
+                                        ${type === 'results' ? `
+                                            <button class="btn-secondary" style="background:#f0f9ff;color:#0369a1;border:none;padding:4px 8px;border-radius:6px;cursor:pointer"
+                                                onclick="editUploadCategory('${h._id}','${h.examType}','${h.examSession || ''}','results','${containerId}')">
+                                                ✏️ Edit
+                                            </button>
+                                        ` : ''}
+                                        <button class="btn-secondary" style="background:#fee2e2;color:#b91c1c;border:none;padding:4px 8px;border-radius:6px;cursor:pointer"
+                                            onclick="rollbackUpload('${h._id}','${h.uploadType}','${type}','${containerId}')">
+                                            🗑️ Rollback
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>`;
                         }).join('')}
@@ -708,6 +716,31 @@ async function rollbackUpload(id, rollbackType, filterType, containerId) {
             loadStats();
         } else {
             alert("Rollback failed: " + data.message);
+        }
+    } catch (e) { alert("Error connecting to server."); }
+}
+
+async function editUploadCategory(id, oldType, oldSession, filterType, containerId) {
+    const newType = prompt("Update Exam Category (e.g. Regular, Supply, Mid-1):", oldType);
+    if (newType === null) return;
+
+    const newSession = prompt("Update Exam Session (e.g. Nov 2023):", oldSession);
+    if (newSession === null) return;
+
+    try {
+        const res = await fetch(`/api/admin/upload-history/${id}`, { 
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ examType: newType, examSession: newSession })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            loadUploadHistory(filterType, containerId);
+            loadStats(); // Stats might change if result counts by type are used
+            if (filterType === 'results') loadAdminResults(); // Refresh current table view
+        } else {
+            alert("Update failed: " + data.message);
         }
     } catch (e) { alert("Error connecting to server."); }
 }

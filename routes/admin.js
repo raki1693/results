@@ -155,6 +155,7 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
       uploadType: 'Results',
       semester:   req.body.semester ? parseInt(req.body.semester) : null,
       examType:   req.body.examType || '',
+      examSession: req.body.examSession || '',
       uploadedBy: req.session.admin.username,
       status:     'In Progress'
     });
@@ -527,6 +528,36 @@ router.delete('/data-files/:id', isAdmin, async (req, res) => {
 
     res.json({ success: true, message: 'File deleted' });
   } catch (err) { res.status(500).json({ success: false }); }
+});
+
+router.put('/upload-history/:id', isAdmin, async (req, res) => {
+  try {
+    const { examType, examSession } = req.body;
+    const history = await UploadHistory.findById(req.params.id);
+    if (!history) return res.status(404).json({ success: false, message: 'History not found' });
+
+    // 1. Update history record
+    history.examType = examType || history.examType;
+    history.examSession = examSession || history.examSession;
+    await history.save();
+
+    // 2. Cascade update ALL results associated with this upload
+    if (history.uploadType === 'Results') {
+        await Result.updateMany(
+            { uploadId: history._id },
+            { 
+                $set: { 
+                    examType: history.examType,
+                    examSession: history.examSession
+                } 
+            }
+        );
+    }
+
+    res.json({ success: true, message: 'Category updated and results synchronized!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 module.exports = router;

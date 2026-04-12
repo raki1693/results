@@ -5,6 +5,7 @@ const UploadHistorySchema = new mongoose.Schema({
   uploadType:   { type: String, enum: ['Students', 'Results'], required: true },
   semester:     { type: Number, default: null },      // e.g. 1–8 (Results only)
   examType:     { type: String, default: '' },        // e.g. "Mid-1", "Regular", "Supply"
+  examSession:  { type: String, default: '' },        // e.g. "Nov 2023"
   recordsCount: { type: Number, default: 0 },
   uploadedBy:   { type: String, required: true },
   timestamp:    { type: Date, default: Date.now },
