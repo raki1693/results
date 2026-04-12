@@ -1,6 +1,12 @@
-// Student Portal Logic
 let currentStudent = null;
 let allResults = [];
+
+// Format Semester (1 -> 1-1, 2 -> 1-2, etc)
+function formatSem(num) {
+    const s = parseInt(num);
+    const map = { 1:'1-1', 2:'1-2', 3:'2-1', 4:'2-2', 5:'3-1', 6:'3-2', 7:'4-1', 8:'4-2' };
+    return map[s] || s;
+}
 
 // Initialize
 let socket;
@@ -261,7 +267,7 @@ function renderOverview() {
     container.innerHTML = allResults.map(res => `
         <div class="sem-card" onclick="viewResultDetail('${res._id}')">
             <div class="sem-card-head">
-                <span class="sem-title">Semester ${res.semester}</span>
+                <span class="sem-title">Semester ${formatSem(res.semester)}</span>
                 <span class="sem-badge ${res.result.toLowerCase()}">${res.result}</span>
             </div>
             <div class="sem-stats">
@@ -495,7 +501,7 @@ async function viewResultDetail(id) {
                         </div>
                         <p style="margin:0;color:rgba(255,255,255,0.75);font-size:0.82rem">
                             ${isInternal ? 'Internal Assessment' : 'Examination'} Result Card &nbsp;·&nbsp;
-                            Semester ${r.semester} &nbsp;·&nbsp; ${r.examType}
+                            Semester ${formatSem(r.semester)} &nbsp;·&nbsp; ${r.examType}
                         </p>
                     </div>
                     <div style="display:flex;align-items:center;gap:1rem">
@@ -514,7 +520,7 @@ async function viewResultDetail(id) {
                         ['Student Name', r.studentName],
                         ['Branch', r.branch],
                         ['Academic Year', r.academicYear],
-                        ['Semester', `Sem ${r.semester}`],
+                        ['Semester', `Sem ${formatSem(r.semester)}`],
                         ...(!isInternal ? [['SGPA', r.sgpa], ['CGPA', r.cgpa || '--']] : [['Percentage', r.percentage + '%']])
                     ].map((item, i) => `
                         <div style="padding:0.85rem 1.1rem;background:${i%2===0?'#f8fafc':'#fff'};border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0">

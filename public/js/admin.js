@@ -1,6 +1,12 @@
-// Admin Portal Logic
 let currentAdmin = null;
 let socket;
+
+// Format Semester (1 -> 1-1, 2 -> 1-2, etc)
+function formatSem(num) {
+    const s = parseInt(num);
+    const map = { 1:'1-1', 2:'1-2', 3:'2-1', 4:'2-2', 5:'3-1', 6:'3-2', 7:'4-1', 8:'4-2' };
+    return map[s] || s;
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     const session = await checkSession();
@@ -400,7 +406,7 @@ async function loadAdminResults() {
                             <tr>
                                 <td><strong>${r.rollNumber}</strong></td>
                                 <td>${r.studentName}</td>
-                                <td>Sem ${r.semester}</td>
+                                <td>Sem ${formatSem(r.semester)}</td>
                                 <td>${r.examType}</td>
                                 <td>${r.sgpa}</td>
                                 <td><span class="status-pill ${r.result === 'Pass' ? 'active' : 'inactive'}">${r.result}</span></td>
@@ -663,7 +669,7 @@ async function loadUploadHistory(type, containerId) {
                     <tbody>
                         ${history.map(h => {
                             const cat = (h.semester || h.examType)
-                                ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#eff6ff;border:1px solid #93c5fd;border-radius:20px;padding:3px 10px;font-size:0.75rem;font-weight:700;color:#1d4ed8;white-space:nowrap">📚 Sem ${h.semester || '?'} &nbsp;·&nbsp; ${h.examType || '?'}</span>`
+                                ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#eff6ff;border:1px solid #93c5fd;border-radius:20px;padding:3px 10px;font-size:0.75rem;font-weight:700;color:#1d4ed8;white-space:nowrap">📚 Sem ${formatSem(h.semester) || '?'} &nbsp;·&nbsp; ${h.examType || '?'}</span>`
                                 : `<span style="color:#94a3b8;font-size:0.8rem">—</span>`;
                             return `
                             <tr>
