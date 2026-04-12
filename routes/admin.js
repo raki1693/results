@@ -511,6 +511,14 @@ router.delete('/bulk/clear/:target', isAdmin, async (req, res) => {
 // ─── DATA UPLOAD ROUTES ───────────────────────────────────────────────────────
 router.post('/upload-data', isAdmin, dataUpload.single('file'), async (req, res) => {
   try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No file selected' });
+    
+    let { title, description, category, branch, role } = req.body;
+    title = title || req.file.originalname.split('.')[0];
+    description = description || 'Institutional document';
+    category = category || 'General';
+    branch = branch || 'All';
+
     const isExcel = req.file.originalname.match(/\.(xlsx|xls)$/i);
     let excelData = [];
     
