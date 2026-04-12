@@ -7,41 +7,119 @@
   gap: 1.5rem;
 }
 
-.sem-card {
-  background: #f8fafc;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 1.5rem;
+/* 🌟 Premium Modern Semester Cards */
+.sem-card.modern {
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 20px;
+  padding: 0px; /* Overridden by sub-containers */
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.04);
 }
 
-.sem-card:hover {
-  border-color: var(--primary);
-  transform: translateY(-5px);
-  background: white;
-  box-shadow: var(--shadow-lg);
+.sem-card.modern:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
 }
 
-.sem-card-head {
+.sem-card-main {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sem-card-top {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  align-items: flex-start;
 }
 
-.sem-title { font-weight: 700; font-size: 1.125rem; }
-.sem-badge { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 100px; }
-.sem-badge.pass { background: #dcfce7; color: #15803d; }
-.sem-badge.fail { background: #fee2e2; color: #b91c1c; }
+.sem-display-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.02em;
+}
 
-.sem-stats {
+.sem-type-tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 100px;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+.sem-session-badge {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 6px 14px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.session-lbl { font-size: 0.55rem; font-weight: 800; color: #94a3b8; }
+.session-val { font-size: 0.85rem; font-weight: 800; color: #1e293b; }
+
+.sem-card-meta {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  border-bottom: 1px dashed #e2e8f0;
+  padding-bottom: 1rem;
+}
+
+.meta-item b { color: #1e293b; }
+
+.sem-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sem-score-grid {
   display: flex;
   gap: 1.5rem;
 }
 
-.sem-stat-item { display: flex; flex-direction: column; }
-.sem-stat-val { font-weight: 800; color: var(--secondary); }
-.sem-stat-lbl { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+.score-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.score-box label { font-size: 0.6rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+.score-box strong { font-size: 1.2rem; font-weight: 800; color: #1e293b; }
+
+.score-box.status strong.pass { color: #16a34a; }
+.score-box.status strong.fail { color: #dc2626; }
+
+.btn-view-modern {
+  background: #1e293b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.sem-card.modern:hover .btn-view-modern {
+  background: var(--primary);
+  padding: 10px 25px;
+}
 
 /* Result Detail Modal */
 .modal-overlay {

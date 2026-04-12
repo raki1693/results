@@ -264,28 +264,55 @@ function renderOverview() {
         return;
     }
 
-    container.innerHTML = allResults.map(res => `
-        <div class="sem-card" onclick="viewResultDetail('${res._id}')">
-            <div class="sem-card-head">
-                <span class="sem-title">Semester ${formatSem(res.semester)} &ndash; ${res.examType}${res.examSession ? ` (${res.examSession})` : ''}</span>
-                <span class="sem-badge ${res.result.toLowerCase()}">${res.result}</span>
-            </div>
-            <div class="sem-stats">
-                <div class="sem-stat-item">
-                    <span class="sem-stat-val">${res.sgpa}</span>
-                    <span class="sem-stat-lbl">SGPA</span>
+    container.innerHTML = allResults.map(res => {
+        const isSupply = res.examType.toLowerCase().includes('supply');
+        const themeColor = isSupply ? '#7c3aed' : '#2563eb';
+        const themeBg = isSupply ? '#f5f3ff' : '#eff6ff';
+        
+        return `
+        <div class="sem-card modern" onclick="viewResultDetail('${res._id}')" style="border-left: 5px solid ${themeColor}; background: linear-gradient(to right, #ffffff, ${themeBg})">
+            <div class="sem-card-main">
+                <div class="sem-card-top">
+                    <div class="sem-info-group">
+                        <h3 class="sem-display-title">Semester ${formatSem(res.semester)}</h3>
+                        <div class="sem-type-tag" style="background: ${themeColor}15; color: ${themeColor}">
+                            ${isSupply ? '🎓 Supplementary' : '📜 Regular Examination'}
+                        </div>
+                    </div>
+                    <div class="sem-session-badge">
+                        <span class="session-lbl">EXAM MONTH</span>
+                        <span class="session-val">${res.examSession || 'N/A'}</span>
+                    </div>
                 </div>
-                <div class="sem-stat-item">
-                    <span class="sem-stat-val">${res.percentage}%</span>
-                    <span class="sem-stat-lbl">Percentage</span>
+
+                <div class="sem-card-meta">
+                    <div class="meta-item">📅 <span>Academic Year: <b>${res.academicYear}</b></span></div>
+                    <div class="meta-item">📢 <span>Released: <b>${new Date(res.publishedAt).toLocaleDateString()}</b></span></div>
                 </div>
-                <div class="sem-stat-item">
-                    <span class="sem-stat-val">${res.examType}${res.examSession ? ` (${res.examSession})` : ''}</span>
-                    <span class="sem-stat-lbl">Exam</span>
+
+                <div class="sem-card-bottom">
+                    <div class="sem-score-grid">
+                        <div class="score-box">
+                            <label>SGPA</label>
+                            <strong>${res.sgpa}</strong>
+                        </div>
+                        <div class="score-box">
+                            <label>CGPA</label>
+                            <strong>${res.cgpa || '--'}</strong>
+                        </div>
+                        <div class="score-box status">
+                            <label>RESULT</label>
+                            <strong class="${res.result.toLowerCase()}">${res.result.toUpperCase()}</strong>
+                        </div>
+                    </div>
+                    <button class="btn-view-modern">
+                        View Report <span class="arrow">→</span>
+                    </button>
                 </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function calculateStats(results) {
