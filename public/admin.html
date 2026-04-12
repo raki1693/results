@@ -25,6 +25,7 @@
         <h1>Admin Portal</h1>
         <p>Restricted access – authorized personnel only</p>
       </div>
+      <!-- Step 1: Login Form -->
       <form id="adminLoginForm" class="auth-form">
         <div class="form-group">
           <label for="adminUser">Username</label>
@@ -42,7 +43,30 @@
           <span class="btn-text">🛡️ Admin Sign In</span>
         </button>
       </form>
-      <p class="auth-hint">Default: <strong>admin</strong> / <strong>admin@123</strong></p>
+
+      <!-- Step 2: Security PIN (Hidden) -->
+      <form id="adminPinForm" class="auth-form hidden">
+        <p style="text-align: center; color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem">Secondary verification required</p>
+        <div class="form-group">
+          <label for="adminPin">Enter Security PIN</label>
+          <input type="password" id="adminPin" placeholder="******" maxlength="6" required style="letter-spacing: 0.5rem; text-align: center; font-size: 1.5rem"/>
+        </div>
+        <div id="adminPinError" class="error-msg hidden"></div>
+        <button type="submit" class="btn-submit">Verify PIN</button>
+        <p id="pinAttempts" style="text-align: center; font-size: 0.8rem; margin-top: 1rem; color: #94a3b8">5 attempts remaining</p>
+      </form>
+
+      <!-- Step 3: Locked / Recovery (Hidden) -->
+      <form id="adminUnlockForm" class="auth-form hidden">
+        <div style="text-align: center; color: #ef4444; font-size: 1.5rem; margin-bottom: 0.5rem">🔒 Portal Locked</div>
+        <p style="text-align: center; color: #64748b; font-size: 0.85rem; margin-bottom: 1.5rem">Security question required to unblock access</p>
+        <div class="form-group">
+          <label>Question: Enter Nickname</label>
+          <input type="text" id="unlockAnswer" placeholder="Answer here" required/>
+        </div>
+        <div id="adminUnlockError" class="error-msg hidden"></div>
+        <button type="submit" class="btn-submit" style="background: #10b981">🔓 Unblock Access</button>
+      </form>
     </div>
   </div>
 

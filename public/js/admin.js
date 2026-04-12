@@ -90,14 +90,26 @@ function showAdminDashboard() {
     loadStats();
 }
 
-// Admin Login
+// Security Tracking
+let pinAttempts = 5;
+const CORRECT_PIN = "965216";
+const UNLOCK_ANSWER = "Junnu";
+let pendingAdminData = null;
+
+// Admin Login - Step 1 (Authentication)
 document.getElementById('adminLoginForm').onsubmit = async (e) => {
     e.preventDefault();
     const username = document.getElementById('adminUser').value;
     const password = document.getElementById('adminPass').value;
     const errorEl = document.getElementById('adminLoginError');
-    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+
     try {
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Verifying...";
+        }
+
         const res = await fetch('/api/auth/admin/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -106,8 +118,10 @@ document.getElementById('adminLoginForm').onsubmit = async (e) => {
         const data = await res.json();
         
         if (data.success) {
-            currentAdmin = data.admin;
-            showAdminDashboard();
+            // Credentials correct, move to Step 2 (PIN)
+            pendingAdminData = data.admin;
+            document.getElementById('adminLoginForm').classList.add('hidden');
+            document.getElementById('adminPinForm').classList.remove('hidden');
         } else {
             errorEl.textContent = data.message;
             errorEl.classList.remove('hidden');
@@ -115,8 +129,83 @@ document.getElementById('adminLoginForm').onsubmit = async (e) => {
     } catch (err) {
         errorEl.textContent = "Server error.";
         errorEl.classList.remove('hidden');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "🛡️ Admin Sign In";
+        }
     }
 };
+
+// Admin PIN - Step 2 (Verification)
+const pinForm = document.getElementById('adminPinForm');
+if (pinForm) {
+    pinForm.onsubmit = (e) => {
+        e.preventDefault();
+        const pin = document.getElementById('adminPin').value;
+        const errorEl = document.getElementById('adminPinError');
+        const attemptEl = document.getElementById('pinAttempts');
+
+        if (pin === CORRECT_PIN) {
+            currentAdmin = pendingAdminData;
+            showAdminDashboard();
+            
+            // Startlive socket
+            if (typeof io !== 'undefined') {
+                socket = io();
+                socket.on('admin_new_message', () => {
+                    const activeSec = document.querySelector('.content-section.active');
+                    if (activeSec && activeSec.id === 'section-admChat') {
+                        loadChatList();
+                        loadStudentChats();
+                    } else {
+                        loadStats(true);
+                    }
+                });
+            }
+            // Reset
+            pinAttempts = 5;
+            document.getElementById('adminPin').value = "";
+        } else {
+            pinAttempts--;
+            if (pinAttempts <= 0) {
+                document.getElementById('adminPinForm').classList.add('hidden');
+                document.getElementById('adminUnlockForm').classList.remove('hidden');
+            } else {
+                errorEl.textContent = "Incorrect PIN!";
+                errorEl.classList.remove('hidden');
+                attemptEl.textContent = `${pinAttempts} attempts remaining`;
+                document.getElementById('adminPin').value = "";
+            }
+        }
+    };
+}
+
+// Admin Unlock - Step 3 (Recovery)
+const unlockForm = document.getElementById('adminUnlockForm');
+if (unlockForm) {
+    unlockForm.onsubmit = (e) => {
+        e.preventDefault();
+        const answer = document.getElementById('unlockAnswer').value.trim();
+        const errorEl = document.getElementById('adminUnlockError');
+
+        if (answer.toLowerCase() === UNLOCK_ANSWER.toLowerCase()) {
+            alert("Account Unlocked! Try signing in again.");
+            pinAttempts = 5;
+            document.getElementById('pinAttempts').textContent = "5 attempts remaining";
+            document.getElementById('adminPinError').classList.add('hidden');
+            document.getElementById('adminPin').value = "";
+            document.getElementById('unlockAnswer').value = "";
+            
+            // Go back to Step 1
+            document.getElementById('adminUnlockForm').classList.add('hidden');
+            document.getElementById('adminLoginForm').classList.remove('hidden');
+        } else {
+            errorEl.textContent = "Incorrect nickname!";
+            errorEl.classList.remove('hidden');
+        }
+    };
+}
 
 async function loadStats() {
     try {
