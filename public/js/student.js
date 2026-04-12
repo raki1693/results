@@ -565,10 +565,10 @@ async function viewResultDetail(id) {
                             <tr style="background:linear-gradient(90deg,#1e3a5f,#2563eb)">
                                 ${isInternal ? `
                                 <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:left">SUBJECT NAME</th>
-                                <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:center">MARKS</th>
-                                <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:center">MAX</th>
-                                <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:center">GRADE</th>
-                                <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:center">STATUS</th>
+                                <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:center">CODE</th>
+                                <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:center">DESC</th>
+                                <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:center">ASSN</th>
+                                <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:center">TOTAL</th>
                                 ` : `
                                 <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:left">COURSE CODE</th>
                                 <th style="padding:10px 14px;color:#fff;font-size:0.72rem;font-weight:700;letter-spacing:.6px;text-align:left">COURSE NAME</th>
@@ -583,10 +583,10 @@ async function viewResultDetail(id) {
                             ${r.subjects.map((s, i) => isInternal ? `
                             <tr style="background:${i%2===0?'#fff':'#f8fafc'};border-bottom:1px solid #f1f5f9">
                                 <td style="padding:11px 14px;font-size:0.88rem;color:#1e293b">${s.name}</td>
-                                <td style="padding:11px 14px;font-size:0.88rem;font-weight:700;color:#1e293b;text-align:center">${s.internalMarks}</td>
-                                <td style="padding:11px 14px;font-size:0.88rem;color:#64748b;text-align:center">${s.maxMarks}</td>
-                                <td style="padding:11px 14px;text-align:center">${gradeBadge(s.grade)}</td>
-                                <td style="padding:11px 14px;text-align:center">${statusPill(s.finalPassedName || s.status)}</td>
+                                <td style="padding:11px 14px;font-size:0.82rem;font-weight:700;color:#2563eb;text-align:center">${s.code}</td>
+                                <td style="padding:11px 14px;font-size:0.88rem;color:#1e293b;text-align:center">${s.descriptiveMarks || '--'}</td>
+                                <td style="padding:11px 14px;font-size:0.88rem;color:#1e293b;text-align:center">${s.assignmentMarks || '--'}</td>
+                                <td style="padding:11px 14px;font-size:0.88rem;font-weight:800;color:var(--primary);text-align:center">${s.internalMarks}</td>
                             </tr>` : `
                             <tr style="background:${i%2===0?'#fff':'#f8fafc'};border-bottom:1px solid #f1f5f9">
                                 <td style="padding:11px 14px;font-size:0.82rem;font-weight:700;color:#2563eb;font-family:monospace">${s.code}</td>

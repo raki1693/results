@@ -193,119 +193,84 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
 
       const key = `${rollNumber}_${semester}_${examType}_${examSession}_${academicYear}`;
       
+      // 🛰️ HIGH-PRECISION HORIZONTAL PARSING: Handle 5 Courses per Row (Mid Format)
+      const subjectsArray = [];
+      const isInternal = examType.toLowerCase().includes('mid') || examType.toLowerCase().includes('assign');
+
+      if (isInternal && findVal(row, ['Course1Name'])) {
+        for (let i = 1; i <= 5; i++) {
+          const name = String(findVal(row, [`Course${i}Name`, `CourseId${i}`]) || '').trim();
+          const code = String(findVal(row, [`Course${i}Code`, `Course${i}Code`]) || '').trim();
+          const desc = parseNum(findVal(row, [`Course${i}DescriptiveMarks`, `Course${i}Descriptive Marks`]));
+          const assn = parseNum(findVal(row, [`Course${i}AssigmentMarks`, `Course${i}Assignment Marks`]));
+          const obj  = parseNum(findVal(row, [`Course${i}ObjectiveMarks`, `Course${i}Objective Marks`]));
+
+          if (name) {
+            const total = desc + assn + obj;
+            const max = 40; // Institutional Mid Default
+            subjectsArray.push({
+              name,
+              code: code || `C0${i}`,
+              courseType: 'Theory',
+              internalMarks: total,
+              maxMarks: max,
+              finalPassedName: total >= (max * 0.4) ? 'Pass' : 'Fail',
+              status: total >= (max * 0.4) ? 'Pass' : 'Fail',
+              // Metadata for Rank Card
+              description: `Desc: ${desc} | Assn: ${assn} | Obj: ${obj}`,
+              credits: 0 // Typically internal doesn't carry independent credits
+            });
+          }
+        }
+      }
+
       if (!grouped[key]) {
         grouped[key] = {
           rollNumber,
           studentName: String(findVal(row, ['name', 'Student Name', 'FullName']) || 'Student').trim(),
           branch: String(findVal(row, ['branchname', 'Branch', 'Dept']) || 'CSE').trim(),
           year: parseNum(findVal(row, ['batch', 'Year'])),
-          semester,
-          section: 'A',
-          examType,
-          examSession,
-          academicYear,
+          semester, section: 'A', examType, examSession, academicYear,
+          uploadId: history._id,
           subjects: []
         };
       }
       
-      const subCode   = String(findVal(row, ['coursecode', 'CourseCode', 'Subject Code', 'Code']) || '').trim();
-      const subName   = String(findVal(row, ['coursename', 'CourseName', 'course name', 'Subject Name', 'Subject']) || '').trim();
-
-      const isInternal = examType.toLowerCase().includes('mid') || examType.toLowerCase().includes('assign');
-
-      if (isInternal) {
-        // ── Internal: calculate marks normally ──
-        const internal = parseNum(findVal(row, ['TotalMarks', 'Marks', 'Internal']));
-        const maxMarks = parseNum(findVal(row, ['Internalmax', 'MaxMarks', 'Internal max'])) || 50;
-        const pct = (internal / maxMarks) * 100;
-        const { grade, gradePoints } = calculateGrade(pct);
-        const creditsRaw = findVal(row, ['credits', 'Credits', 'credit']);
-        const credits = creditsRaw !== null && creditsRaw !== undefined ? parseNum(creditsRaw) : 3;
-
-        if (subCode || subName) {
-          grouped[key].subjects.push({
-            code: subCode || 'N/A',
-            name: subName || subCode || 'Unknown',
-            courseType: '',
-            internalMarks: internal,
-            externalMarks: 0,
-            totalMarks: internal,
-            maxMarks,
-            grade,
-            gradePoints,
-            credits,
-            finalPassedName: internal >= maxMarks * 0.4 ? 'Pass' : 'Fail',
-            status: internal >= maxMarks * 0.4 ? 'Pass' : 'Fail'
-          });
-        }
+      if (subjectsArray.length > 0) {
+        grouped[key].subjects.push(...subjectsArray);
       } else {
-        // ── External: use EXACT values from Excel columns ──
-        const courseType      = String(findVal(row, ['coursetype', 'CourseType', 'Course Type']) || '').trim();
-        const finalPassedName = String(findVal(row, ['finalpassedname', 'FinalPassedName', 'Final Passed Name', 'Pass/Fail']) || '').trim();
-        const gradeRaw        = String(findVal(row, ['grade', 'Grade']) || '').trim();
-        const gradeId         = String(findVal(row, ['grid', 'GrId', 'Grade ID']) || '').trim();
-        const creditsRaw       = findVal(row, ['credits', 'Credits', 'credit', 'creditpoints']);
-        const credits         = creditsRaw !== null && creditsRaw !== undefined ? parseNum(creditsRaw) : 0;
-        const sgpaRaw         = parseNum(findVal(row, ['sgpa', 'SGPA']));
-        const cgpaRaw         = parseNum(findVal(row, ['cgpa', 'CGPA']));
-
-        // Store SGPA/CGPA at result level (overwrite per subject row — last row wins per student)
-        grouped[key].sgpa = sgpaRaw || grouped[key].sgpa || 0;
-        grouped[key].cgpa = cgpaRaw || grouped[key].cgpa || 0;
-
-        // Derive gradePoints — prefer direct 'Gradepoints' column, then GrId, then grade-letter map
-        const gradePointMap = { 'O': 10, 'A+': 9, 'A': 8, 'B+': 7, 'B': 6, 'C': 5, 'F': 0 };
-        const gradePointsRaw = findVal(row, ['gradepoints', 'Gradepoints', 'Grade Points', 'GradePoint']);
-        const gradePoints = gradePointsRaw !== null && gradePointsRaw !== undefined
-          ? parseNum(gradePointsRaw)
-          : (gradeId ? parseNum(gradeId) : (gradePointMap[gradeRaw.toUpperCase()] ?? 0));
-
-        // Determine status from FinalPassedName
-        const passedStr = finalPassedName.toLowerCase();
-        const subStatus = passedStr.includes('fail') ? 'Fail'
-          : passedStr.includes('absent') ? 'Absent'
-          : passedStr.includes('with') ? 'Withheld'
-          : 'Pass';
-
-        const finalMarks = parseNum(findVal(row, ['finalmarks', 'FinalMarks', 'Final Marks']));
-        const extMax     = parseNum(findVal(row, ['extmax', 'ExtMax', 'Ext Max'])) || 100;
-
-        if (subCode || subName) {
-          grouped[key].subjects.push({
-            code: subCode || 'N/A',
-            name: subName || subCode || 'Unknown',
-            courseType,
-            internalMarks: parseNum(findVal(row, ['totalinternalmarks', 'IntRawMarks', 'Internal'])),
-            externalMarks: parseNum(findVal(row, ['finalexternal', 'FinalExternal', 'ExtRawMarks', 'External'])),
-            totalMarks: finalMarks || parseNum(findVal(row, ['totalrawmarks', 'TotalRawMarks'])),
-            maxMarks: extMax,
-            grade: gradeRaw || 'F',
-            gradePoints,
-            credits,
-            finalPassedName,
-            status: subStatus
-          });
+        // Fallback for Vertical Format
+        const fallbackSubCode = String(findVal(row, ['coursecode', 'CourseCode', 'Subject Code', 'Code', 'courseId']) || '').trim();
+        const fallbackSubName = String(findVal(row, ['coursename', 'CourseName', 'course name', 'Subject Name', 'Subject']) || '').trim();
+        if (fallbackSubCode || fallbackSubName) {
+            const internal = parseNum(findVal(row, ['TotalMarks', 'Marks', 'Internal']));
+            const max = parseNum(findVal(row, ['Internalmax', 'MaxMarks', 'Internal max'])) || 50;
+            grouped[key].subjects.push({
+                code: fallbackSubCode || 'N/A',
+                name: fallbackSubName || fallbackSubCode || 'Unknown',
+                internalMarks: internal,
+                maxMarks: max,
+                status: internal >= max * 0.4 ? 'Pass' : 'Fail'
+            });
         }
       }
-    }
+    } // End of main data loop
 
+    // ─── Phase 2: Persist Grouped Results ───
     for (const key of Object.keys(grouped)) {
       try {
         const entry = grouped[key];
         const isExternalType = !entry.examType.toLowerCase().includes('mid') && !entry.examType.toLowerCase().includes('assign');
 
-        const totalObtained = entry.subjects.reduce((s, sub) => s + sub.totalMarks, 0);
-        const totalMax      = entry.subjects.reduce((s, sub) => s + sub.maxMarks, 0);
+        const totalObtained = entry.subjects.reduce((s, sub) => s + (sub.totalMarks || sub.internalMarks || 0), 0);
+        const totalMax      = entry.subjects.reduce((s, sub) => s + (sub.maxMarks || 0), 0);
         const percentage    = totalMax > 0 ? parseFloat(((totalObtained / totalMax) * 100).toFixed(2)) : 0;
 
-        // For External: use SGPA/CGPA directly from Excel; for Internal: calculate
-        const totalCredits  = entry.subjects.reduce((s, sub) => s + sub.credits, 0);
-        const sgpa = isExternalType && entry.sgpa
-          ? entry.sgpa
-          : (totalCredits > 0
-              ? parseFloat((entry.subjects.reduce((s, sub) => s + sub.gradePoints * sub.credits, 0) / totalCredits).toFixed(2))
-              : 0);
-        const cgpa = isExternalType ? (entry.cgpa || 0) : 0;
+        const totalCredits  = entry.subjects.reduce((s, sub) => s + (sub.credits || 0), 0);
+        
+        // Use SGPA from row if external, else calculate (Simplified for Mid)
+        const sgpa = isExternalType && entry.sgpa ? entry.sgpa : 0; 
+        const cgpa = isExternalType && entry.cgpa ? entry.cgpa : 0;
 
         const hasFail      = entry.subjects.some(s => s.status === 'Fail' || s.status === 'Absent');
         const resultStatus = hasFail ? 'Fail' : 'Pass';
@@ -318,45 +283,22 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
             examSession: entry.examSession, 
             academicYear: entry.academicYear 
           },
-          { ...entry, uploadId: history._id, totalMarksObtained: totalObtained, totalMaxMarks: totalMax, percentage, sgpa, cgpa, result: resultStatus, uploadedBy: req.session.admin.username },
+          { ...entry, totalMarksObtained: totalObtained, totalMaxMarks: totalMax, percentage, sgpa, cgpa, result: resultStatus, uploadedBy: req.session.admin.username },
           { upsert: true, new: true }
         );
 
-        const student = await Student.findOne({ rollNumber: entry.rollNumber });
-        if (!student) {
-          const newStudent = new Student({
-            rollNumber: entry.rollNumber,
-            name: entry.studentName,
-            email: `${entry.rollNumber.toLowerCase()}@college.edu`,
-            password: entry.rollNumber.toLowerCase(),
-            branch: entry.branch,
-            year: entry.year,
-            uploadId: history._id
-          });
-          await newStudent.save();
-        }
         created++;
         
-        // 🚀 Live Progress Update (Every 10 records to avoid spam)
-        if (created % 10 === 0 || created === Object.keys(grouped).length) {
-            req.app.get('io').emit('upload_progress', { 
-                type: 'Results',
-                processed: created, 
-                total: Object.keys(grouped).length,
-                percent: Math.round((created / Object.keys(grouped).length) * 100)
-            });
+        // Socket Progress
+        if (created % 10 === 0) {
+            req.app.get('io').emit('upload_progress', { type: 'Results', processed: created, total: Object.keys(grouped).length });
         }
       } catch (e) {
         errors.push(`Error for record ${key}: ${e.message}`);
       }
     }
 
-    await UploadHistory.findByIdAndUpdate(history._id, { 
-        recordsCount: created, 
-        totalRows: data.length,
-        failedCount: failedRows,
-        status: 'Success' 
-    });
+    await UploadHistory.findByIdAndUpdate(history._id, { recordsCount: created, status: 'Success' });
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     req.app.get('io').emit('results_updated', { message: 'New results published!' });
 
