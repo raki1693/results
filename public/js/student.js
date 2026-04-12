@@ -888,35 +888,44 @@ function switchBranchData(branch, btn) {
 }
 
 async function handleHtnoSearch() {
-    const searchVal = document.getElementById('dataSearchInput').value.trim();
+    const searchVal = document.getElementById('dataSearchInput').value.trim().toUpperCase();
     if (!searchVal) return alert("Please enter a Hall Ticket Number to search.");
 
     try {
-        const res = await fetch(`/api/results/student-info/${searchVal}`);
+        const res = await fetch(`/api/results/data/search/${searchVal}`);
         const data = await res.json();
         const infoBox = document.getElementById('studentProfileInfo');
         
-        if (data.success) {
-            const s = data.student;
+        if (data.success && data.records.length > 0) {
             infoBox.innerHTML = `
-                <div class="profile-card-modern">
-                    <div class="profile-avatar-big">${s.name.charAt(0)}</div>
-                    <div class="profile-details-modern">
-                        <h3>${s.name}</h3>
-                        <p>${s.rollNumber} | ${s.email || 'No Email'}</p>
-                        <div class="profile-meta-chips">
-                            <span class="profile-chip">${s.branch}</span>
-                            <span class="profile-chip">Year ${s.year}</span>
-                            <span class="profile-chip">Section ${s.section || 'A'}</span>
-                        </div>
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="color:var(--secondary); font-size: 1rem; margin-bottom: 1rem;">🔎 Found ${data.records.length} records in Institutional Datasets:</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                        ${data.records.map(r => `
+                            <div class="section-card" style="flex-direction: column; align-items: flex-start; padding: 1.25rem; border-top: 4px solid #10b981; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                <div style="display:flex; justify-content:space-between; width:100%; margin-bottom: 0.5rem;">
+                                    <span style="font-size: 0.7rem; font-weight: 800; color: #059669; text-transform: uppercase;">${r.sourceCategory}</span>
+                                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--secondary);">${r.sourceTitle}</span>
+                                </div>
+                                <div style="width:100%; font-size: 0.85rem;">
+                                    ${Object.entries(r.data).map(([key, val]) => `
+                                        <div style="display:flex; justify-content:space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9;">
+                                            <span style="color: #64748b; font-weight: 600;">${key}</span>
+                                            <span style="color: var(--secondary); font-weight: 700;">${val}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
         } else {
-            infoBox.innerHTML = `<div class="error-msg" style="margin-bottom:1rem">Note: No matching student profile found. Showing related files only.</div>`;
+            infoBox.innerHTML = `<div class="error-msg" style="margin-bottom:2rem; background:#fff1f2; color:#be123c; border-color:#fecdd3;">No specific information found for Htno: ${searchVal} in the current datasets.</div>`;
         }
     } catch (err) {
-        console.error("Profile fetch error:", err);
+        console.error("Search error:", err);
+        alert("Search failed. Plase check your connection.");
     }
 
     // Force switch to Students tab

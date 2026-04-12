@@ -120,6 +120,35 @@ router.get('/student-info/:rollNumber', isStudent, async (req, res) => {
   } catch (err) { res.status(500).json({ success: false }); }
 });
 
+router.get('/data/search/:htno', async (req, res) => {
+    try {
+        const htno = req.params.htno.toUpperCase();
+        const DataFile = require('../models/DataFile');
+        const files = await DataFile.find({ isSpreadsheet: true });
+        
+        let foundRecords = [];
+        
+        files.forEach(file => {
+            // Search each row of the excel data
+            const match = file.excelData.find(row => {
+                // Look for common HTNO column names
+                const val = (row['Htno'] || row['HTNO'] || row['HallTicketNo'] || row['Admissionno'] || row['Roll Number'] || row['RollNo'] || '');
+                return String(val).trim().toUpperCase() === htno;
+            });
+            
+            if (match) {
+                foundRecords.push({
+                    sourceTitle: file.title,
+                    sourceCategory: file.category,
+                    data: match
+                });
+            }
+        });
+
+        res.json({ success: true, records: foundRecords });
+    } catch (err) { res.status(500).json({ success: false }); }
+});
+
 router.get('/data/files/:id', async (req, res) => {
     try {
         const file = await require('../models/DataFile').findById(req.params.id);

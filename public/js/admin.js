@@ -1154,11 +1154,21 @@ async function confirmDelete(target) {
 }
 
 async function handleDataUpload(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const btn = document.getElementById('dataUploadBtn');
     const fileField = document.getElementById('dataFileField');
     
     const file = fileField.files[0];
+    if (!file) { alert("Please select an Excel file."); return; }
+
+    const isExcel = file.name.match(/\.(xlsx|xls)$/i);
+    if (!isExcel) {
+        alert("❌ Error: Institutional DATA repository only accepts Excel files (.xlsx, .xls) for perfect data reading.");
+        fileField.value = '';
+        resetFileLabel();
+        return;
+    }
+
     const titleVal = document.getElementById('dataTitle').value.trim() || file.name.split('.')[0];
     const descVal = document.getElementById('dataDesc').value.trim() || 'Institutional document';
 
@@ -1180,10 +1190,19 @@ async function handleDataUpload(e) {
         });
         const data = await res.json();
         if (data.success) {
-            alert("✨ Resource published and synchronized!");
-            e.target.reset();
+            const statusBox = document.getElementById('dataUploadStatus');
+            const statusText = document.getElementById('dataStatusText');
+            
+            statusBox.classList.remove('hidden');
+            statusText.textContent = data.message || "Data Published Successfully!";
+            
+            // Reset UI
+            if (e && e.target) e.target.reset();
             resetFileLabel();
             loadAdminDataFiles();
+            
+            // Auto hide
+            setTimeout(() => { statusBox.classList.add('hidden'); }, 5000);
         } else {
             alert("❌ Upload Failed: " + data.message);
         }
