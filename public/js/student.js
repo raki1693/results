@@ -872,7 +872,8 @@ function switchDataTab(role, btn) {
         sidebar.style.display = 'flex';
         // Reset sub-nav highlight to 'All'
         document.querySelectorAll('.branch-nav-item').forEach(b => b.classList.remove('active'));
-        document.querySelector('.branch-nav-item[onclick*="All"]').classList.add('active');
+        const allBtn = document.querySelector('.branch-nav-item[onclick*="All"]');
+        if (allBtn) allBtn.classList.add('active');
     } else {
         sidebar.style.display = 'none';
     }
@@ -898,37 +899,104 @@ async function handleHtnoSearch() {
         
         if (data.success && data.records.length > 0) {
             infoBox.innerHTML = `
-                <div style="margin-bottom: 3rem;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem;">
-                        <span style="font-size: 1.5rem;">📁</span>
-                        <h3 style="color:var(--secondary); font-size: 1.1rem; margin:0;">Personalized Records Hub</h3>
+                <div style="margin-bottom: 3rem; animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9;">
+                        <span style="font-size: 2rem; filter: drop-shadow(0 4px 6px rgba(16,185,129,0.2));">🎓</span>
+                        <div>
+                            <h3 style="color:var(--secondary); font-size: 1.25rem; font-weight: 800; margin:0;">Student Master Profile</h3>
+                            <p style="font-size: 0.8rem; color: #64748b; margin:0;">Retrieved from official institutional records</p>
+                        </div>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
-                        ${data.records.map(r => `
-                            <div class="section-card" style="flex-direction: column; align-items: flex-start; padding: 1.5rem; border-left: 6px solid #10b981; background: #ffffff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border-radius: 16px;">
-                                <div style="display:flex; justify-content:space-between; align-items: center; width:100%; margin-bottom: 1.25rem;">
-                                    <div style="display:flex; flex-direction: column;">
-                                        <span style="font-size: 0.65rem; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.05em;">${r.sourceCategory}</span>
-                                        <span style="font-size: 1rem; font-weight: 800; color: var(--secondary);">${r.sourceTitle}</span>
-                                    </div>
-                                    <div style="background: #ecfdf5; padding: 8px; border-radius: 50%; color: #10b981;">📊</div>
-                                </div>
-                                <div style="width:100%; display: flex; flex-direction: column; gap: 8px;">
-                                    ${Object.entries(r.data).map(([key, val]) => `
-                                        <div style="display:flex; justify-content:space-between; align-items: center; padding: 8px 12px; background: #f8fafc; border-radius: 8px;">
-                                            <span style="color: #64748b; font-weight: 600; font-size: 0.75rem;">${key}</span>
-                                            <span style="color: var(--secondary); font-weight: 700; font-size: 0.85rem;">${val}</span>
+
+                    <div style="display: flex; flex-direction: column; gap: 2rem;">
+                        ${data.records.map(r => {
+                            const d = r.data;
+                            return `
+                            <div class="master-record-container" style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05);">
+                                <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 1.5rem 2rem; color: white;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <span style="font-size: 0.7rem; font-weight: 800; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.1em;">${r.sourceCategory}</span>
+                                            <h4 style="font-size: 1.25rem; font-weight: 800; margin: 5px 0 0 0;">${r.sourceTitle}</h4>
                                         </div>
-                                    `).join('')}
+                                        <div style="background: rgba(255,255,255,0.2); padding: 10px; border-radius: 12px; font-weight: 800; font-size: 0.9rem;">
+                                            # ${d['HallTicketNo'] || d['HTNO'] || d['RollNo'] || 'RECORD'}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style="margin-top: 1.25rem; width: 100%; text-align: right;">
-                                    <span style="font-size: 0.7rem; color: #94a3b8; font-style: italic;">Verified Database Entry</span>
+
+                                <div style="padding: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                                    
+                                    <div class="data-group">
+                                        <h5 style="color: #059669; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                                            <span>👤</span> Personal Identity
+                                        </h5>
+                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                            ${['StudentName', 'GenderName', 'DateOfBirth', 'AaadharNo', 'ReligionName', 'CasteCategoryName'].map(k => d[k] ? `
+                                                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                                                    <span style="color: #94a3b8; font-weight: 600;">${k.replace('Name','')}</span>
+                                                    <span style="color: var(--secondary); font-weight: 700;">${d[k]}</span>
+                                                </div>
+                                            ` : '').join('')}
+                                        </div>
+                                    </div>
+
+                                    <div class="data-group">
+                                        <h5 style="color: #059669; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                                            <span>📚</span> Academic Context
+                                        </h5>
+                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                            ${['ProgramName', 'BranchName', 'Semester', 'RegulationName', 'Batch', 'YearOfJoin', 'AdmissionType'].map(k => d[k] ? `
+                                                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                                                    <span style="color: #94a3b8; font-weight: 600;">${k.replace('Name','')}</span>
+                                                    <span style="color: var(--secondary); font-weight: 700;">${d[k]}</span>
+                                                </div>
+                                            ` : '').join('')}
+                                        </div>
+                                    </div>
+
+                                    <div class="data-group">
+                                        <h5 style="color: #059669; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                                            <span>📞</span> Family & Contact
+                                        </h5>
+                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                            ${['FatherName', 'MotherName', 'StudentEmail', 'StudMobile', 'ParentMobile'].map(k => d[k] ? `
+                                                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                                                    <span style="color: #94a3b8; font-weight: 600;">${k.replace('Name','')}</span>
+                                                    <span style="color: var(--secondary); font-weight: 700;">${d[k]}</span>
+                                                </div>
+                                            ` : '').join('')}
+                                        </div>
+                                    </div>
+
+                                    <div class="data-group">
+                                        <h5 style="color: #059669; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                                            <span>💳</span> Additional Details
+                                        </h5>
+                                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                                            ${['FeeReimbursement', 'FeeReimbursementAmount', 'AttendanceDetainee'].map(k => d[k] ? `
+                                                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                                                    <span style="color: #94a3b8; font-weight: 600;">${k.replace('Name','')}</span>
+                                                    <span style="color: var(--secondary); font-weight: 700;">${d[k]}</span>
+                                                </div>
+                                            ` : '').join('')}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="background: #f8fafc; padding: 1.5rem 2rem; border-top: 1px solid #e2e8f0;">
+                                     <div style="display: flex; gap: 10px;">
+                                        <span style="font-size: 1.2rem;">🏠</span>
+                                        <div>
+                                            <strong style="display: block; font-size: 0.7rem; color: #64748b; text-transform: uppercase;">Primary Address</strong>
+                                            <p style="font-size: 0.8rem; font-weight: 700; color: var(--secondary); margin: 4px 0 0 0;">${d.PermAddress || d.CorAddress || d.StreetName || 'Address details in file'}</p>
+                                        </div>
+                                     </div>
                                 </div>
                             </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
-                    <hr style="margin: 3rem 0; border: 0; border-top: 2px dashed #e2e8f0;"/>
-                    <h3 style="color:var(--secondary); font-size: 1rem; margin-bottom: 1.5rem;">📂 Related Institutional Files:</h3>
                 </div>
             `;
         } else {
@@ -939,17 +1007,13 @@ async function handleHtnoSearch() {
         alert("Search failed. Plase check your connection.");
     }
 
-    // Force switch to Students tab
+    // Reset UI view to students tab
     currentDataRole = 'Students';
     currentDataBranch = 'All';
-    
-    // UI Update
     document.querySelectorAll('.data-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tab-Students').classList.add('active');
-    
-    // Hide branch sidebar during direct Htno search as requested
-    const sidebar = document.getElementById('dataBranchSidebar');
-    sidebar.style.display = 'none';
+    const branchSbar = document.getElementById('dataBranchSidebar');
+    if (branchSbar) branchSbar.style.display = 'none';
 
     loadStudentDataFiles();
 }
