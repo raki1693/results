@@ -165,12 +165,38 @@
                 </div>
               </div>
 
+              <div class="form-group-modern" style="margin-bottom: 2rem;">
+                <label>Storage Mode</label>
+                <div class="mode-toggle-group">
+                  <label class="mode-option">
+                    <input type="radio" name="uploadMode" value="database" checked onchange="toggleUploadMode('database')" />
+                    <div class="mode-card">
+                      <span class="mode-icon">💾</span>
+                      <div class="mode-info">
+                        <strong>DATABASE</strong>
+                        <span>Searchable Excel Records</span>
+                      </div>
+                    </div>
+                  </label>
+                  <label class="mode-option">
+                    <input type="radio" name="uploadMode" value="document" onchange="toggleUploadMode('document')" />
+                    <div class="mode-card">
+                      <span class="mode-icon">📄</span>
+                      <div class="mode-info">
+                        <strong>DOCUMENT</strong>
+                        <span>PDF / Notice / View-only</span>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
               <div class="form-group-modern">
-                 <label>File Attachment</label>
-                 <div class="modern-drop-zone" id="dataFileDropZone" onclick="document.getElementById('dataFileField').click()" ondrop="handleDataDrop(event)" ondragover="event.preventDefault(); this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')">
-                    <div class="drop-illu">📁</div>
-                    <p class="drop-txt">Drag & Drop or <span>Click to Browse</span></p>
-                    <p class="drop-sub">PDF, Images, or Documents (Max 10MB)</p>
+                 <label id="fileInputLabel">Database Attachment (Excel Only)</label>
+                 <div class="modern-drop-zone mode-database" id="dataFileDropZone" onclick="document.getElementById('dataFileField').click()" ondrop="handleDataDrop(event)" ondragover="event.preventDefault(); this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')">
+                    <div class="drop-illu" id="dropZoneIcon">📊</div>
+                    <p class="drop-txt" id="dropZoneText">Drag & Drop or <span>Click to Browse Excel</span></p>
+                    <p class="drop-sub" id="dropZoneSub">Only .xlsx or .xls files accepted for Database mode</p>
                     <div id="fileSelectedLabel" class="selected-badge hidden">No file selected</div>
                     <input type="file" id="dataFileField" required hidden onchange="updateFileLabel(this)" />
                  </div>

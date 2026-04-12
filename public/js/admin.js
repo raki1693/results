@@ -1153,19 +1153,41 @@ async function confirmDelete(target) {
     }
 }
 
+function toggleUploadMode(mode) {
+    const dropZone = document.getElementById('dataFileDropZone');
+    const inputLabel = document.getElementById('fileInputLabel');
+    const zoneIcon = document.getElementById('dropZoneIcon');
+    const zoneText = document.getElementById('dropZoneText');
+    const zoneSub = document.getElementById('dropZoneSub');
+    
+    if (mode === 'database') {
+        dropZone.className = 'modern-drop-zone mode-database';
+        inputLabel.textContent = 'Database Attachment (Excel Only)';
+        zoneIcon.textContent = '📊';
+        zoneText.innerHTML = 'Drag & Drop or <span>Click to Browse Excel</span>';
+        zoneSub.textContent = 'Only .xlsx or .xls files accepted for Database mode';
+    } else {
+        dropZone.className = 'modern-drop-zone mode-document';
+        inputLabel.textContent = 'File Attachment (General)';
+        zoneIcon.textContent = '📄';
+        zoneText.innerHTML = 'Drag & Drop or <span>Click to Browse Files</span>';
+        zoneSub.textContent = 'PDF, Images, or Documents (Max 10MB)';
+    }
+}
+
 async function handleDataUpload(e) {
     if (e) e.preventDefault();
     const btn = document.getElementById('dataUploadBtn');
     const fileField = document.getElementById('dataFileField');
+    const mode = document.querySelector('input[name="uploadMode"]:checked').value;
     
     const file = fileField.files[0];
-    if (!file) { alert("Please select an Excel file."); return; }
+    if (!file) { alert("Please select a file to upload."); return; }
 
     const isExcel = file.name.match(/\.(xlsx|xls)$/i);
-    if (!isExcel) {
-        alert("❌ Error: Institutional DATA repository only accepts Excel files (.xlsx, .xls) for perfect data reading.");
-        fileField.value = '';
-        resetFileLabel();
+    
+    if (mode === 'database' && !isExcel) {
+        alert("❌ Error: You selected DATABASE mode, but provided a non-Excel file. Please provide an .xlsx or .xls file for database ingestion.");
         return;
     }
 
@@ -1181,7 +1203,8 @@ async function handleDataUpload(e) {
     formData.append('file', file);
 
     btn.disabled = true;
-    btn.innerHTML = '<div class="spinner-small" style="margin:0 auto"></div>';
+    const loadingMsg = mode === 'database' ? '⚙️ Ingesting Records into Database...' : '🚀 Publishing Document...';
+    btn.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; gap:10px;"><div class="spinner-small"></div> ${loadingMsg}</div>`;
 
     try {
         const res = await fetch('/api/admin/upload-data', {
