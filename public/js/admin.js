@@ -1346,9 +1346,13 @@ function toggleSidebar() {
 }
 
 function updateResultsFileLabel(input) {
-    const badge = document.getElementById('resSelectedBadge');
+    updateFileLabel(input, 'resSelectedBadge');
+}
+
+function updateFileLabel(input, badgeId = 'fileSelectedLabel') {
+    const badge = document.getElementById(badgeId);
     if (input.files && input.files[0]) {
-        badge.textContent = `📎 Selected: ${input.files[0].name}`;
+        badge.textContent = `✅ Selected: ${input.files[0].name}`;
         badge.classList.remove('hidden');
     } else {
         badge.classList.add('hidden');
@@ -1396,5 +1400,91 @@ async function handleResultsUpload() {
     } finally {
         btn.disabled = false;
         btn.innerHTML = `🚀 Upload & Publish Results`;
+    }
+}
+
+// 📂 PREMIUM DATA ASSET ENGINE
+function toggleUploadMode(mode) {
+    const icon = document.getElementById('dropZoneIcon');
+    const text = document.getElementById('dropZoneText');
+    const label = document.getElementById('fileInputLabel');
+    const dropZone = document.getElementById('dataFileDropZone');
+
+    if (mode === 'database') {
+        icon.textContent = '📊';
+        text.innerHTML = 'Drag & Drop or <span>Click to Browse Excel</span>';
+        label.textContent = 'Database Attachment (Excel Only)';
+        dropZone.classList.add('mode-database');
+        dropZone.classList.remove('mode-document');
+    } else {
+        icon.textContent = '📄';
+        text.innerHTML = 'Drag & Drop or <span>Click to Browse Document</span>';
+        label.textContent = 'Resource File (PDF / Image / Doc)';
+        dropZone.classList.add('mode-document');
+        dropZone.classList.remove('mode-database');
+    }
+}
+
+function handleDataDrop(e) {
+    e.preventDefault();
+    const dropZone = e.currentTarget;
+    dropZone.classList.remove('dragover');
+    
+    if (e.dataTransfer.files.length) {
+        const fileField = document.getElementById('dataFileField');
+        fileField.files = e.dataTransfer.files;
+        updateFileLabel(fileField, 'fileSelectedLabel');
+    }
+}
+
+async function handleDataUpload(e) {
+    e.preventDefault();
+    const btn = document.getElementById('dataUploadBtn');
+    const status = document.getElementById('dataUploadStatus');
+    const statusText = document.getElementById('dataStatusText');
+    const fileField = document.getElementById('dataFileField');
+
+    const title = document.getElementById('dataTitle').value;
+    const desc = document.getElementById('dataDesc').value;
+    const cat = document.getElementById('dataCategory').value;
+    const branch = document.getElementById('dataBranch').value;
+    const mode = document.querySelector('input[name="uploadMode"]:checked').value;
+
+    if (!fileField.files[0]) { alert("Please select a file to publish."); return; }
+
+    const formData = new FormData();
+    formData.append('file', fileField.files[0]);
+    formData.append('title', title);
+    formData.append('description', desc);
+    formData.append('category', cat);
+    formData.append('branch', branch);
+    formData.append('mode', mode);
+
+    try {
+        btn.disabled = true;
+        btn.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; gap:10px;"><div class="spinner-small"></div> Publishing...</div>`;
+        
+        const res = await fetch('/api/admin/data-upload', {
+            method: 'POST',
+            body: formData
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+            statusText.textContent = "Data Published Successfully!";
+            status.classList.remove('hidden');
+            document.getElementById('uploadDataForm').reset();
+            document.getElementById('fileSelectedLabel').classList.add('hidden');
+            toggleUploadMode('database'); // Reset to default
+            setTimeout(() => status.classList.add('hidden'), 5000);
+            if (typeof loadAdminDataFiles === 'function') loadAdminDataFiles();
+        } else {
+            alert("❌ Publication failed: " + result.message);
+        }
+    } catch (err) {
+        alert("❌ Network Error: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `⚡ Upload & Publish to Portal`;
     }
 }
