@@ -19,7 +19,7 @@
 
   <!-- Navbar -->
   <nav class="navbar">
-    <div class="nav-brand">
+    <div class="nav-brand" style="cursor: pointer" onclick="checkKnock()">
       <div class="nav-logo">🎓</div>
       <span>Kits Result <strong>Portal</strong></span>
     </div>
@@ -27,7 +27,7 @@
       <a href="#features">Features</a>
       <a href="#about">About</a>
       <a href="/student" class="btn-nav-student">Student Login</a>
-      <a href="/admin" class="btn-nav-admin">Admin Portal</a>
+      <a href="/admin" class="btn-nav-admin admin-secret hidden">Admin Portal</a>
     </div>
   </nav>
 
@@ -47,7 +47,7 @@
         <a href="/student" class="btn-primary">
           <span class="btn-icon">👨‍🎓</span> Student Login
         </a>
-        <a href="/admin" class="btn-secondary">
+        <a href="/admin" class="btn-secondary admin-secret hidden">
           <span class="btn-icon">🛡️</span> Admin Portal
         </a>
       </div>
@@ -162,6 +162,27 @@
         document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
       });
     });
+  </script>
+  <style>
+    .admin-secret.hidden { display: none !important; }
+  </style>
+
+  <script>
+    let knockCount = 0;
+    let knockTimer;
+    function checkKnock() {
+      knockCount++;
+      clearTimeout(knockTimer);
+      knockTimer = setTimeout(() => knockCount = 0, 3000); // Reset if no clicks for 3 secs
+      
+      if (knockCount === 5) {
+        document.querySelectorAll('.admin-secret').forEach(el => {
+          el.classList.remove('hidden');
+          el.style.animation = 'pulse 1s infinite';
+        });
+        alert('🔓 Administrative access points revealed.');
+      }
+    }
   </script>
 </body>
 </html>
