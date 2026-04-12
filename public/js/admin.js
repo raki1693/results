@@ -33,8 +33,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Refresh lists if results are updated
         socket.on('results_updated', () => {
             const activeSec = document.querySelector('.content-section.active');
-            if (activeSec.id === 'section-admResults') loadAdminResults(true);
+            if (activeSec && activeSec.id === 'section-admResults') loadAdminResults(true);
             loadStats(true);
+        });
+
+        // 🚀 LIVE UPLOAD PROGRESS
+        socket.on('upload_progress', (data) => {
+            const isResults = data.type === 'Results';
+            const prefix = isResults ? 'res' : 'stu';
+            
+            const progressWrap = document.getElementById(`${prefix}UploadProgress`);
+            const progressBar = document.getElementById(`${prefix}ProgressBar`);
+            const statusLabel = document.getElementById(`${prefix}UploadStatus`);
+            const percentLabel = document.getElementById(`${prefix}UploadPercent`);
+
+            if (progressWrap) progressWrap.classList.remove('hidden');
+            if (progressBar) progressBar.style.width = `${data.percent}%`;
+            if (percentLabel) percentLabel.textContent = `${data.percent}%`;
+            
+            if (statusLabel) {
+                if (data.percent < 100) {
+                    statusLabel.textContent = `⚙️ Processing ${data.processed} of ${data.total} records...`;
+                } else {
+                    statusLabel.textContent = `✅ Wrapping up...`;
+                }
+            }
         });
 
         // Start live UI timer
@@ -429,7 +452,6 @@ async function deleteResult(id) {
     if (data.success) loadAdminResults();
 }
 
-// Excel Uploads
 async function handleStudentUpload() {
     const fileInput = document.getElementById('stuFile');
     if (!fileInput.files.length) return;
@@ -441,11 +463,13 @@ async function handleStudentUpload() {
     const progressBar = document.getElementById('stuProgressBar');
     const status = document.getElementById('stuUploadStatus');
     const resultBox = document.getElementById('stuUploadResult');
+    const percentLbl = document.getElementById('stuUploadPercent');
     
     progressWrap.classList.remove('hidden');
     resultBox.classList.add('hidden');
-    progressBar.style.width = '30%';
-    status.textContent = 'Processing Excel...';
+    progressBar.style.width = '0%';
+    percentLbl.textContent = '0%';
+    status.textContent = '⏳ Initializing Upload...';
 
     try {
         const res = await fetch('/api/admin/upload-students', {
@@ -454,18 +478,21 @@ async function handleStudentUpload() {
         });
         const data = await res.json();
         
-        progressBar.style.width = '100%';
         if (data.success) {
-            status.textContent = 'Upload Complete!';
-            resultBox.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <p style="color: var(--success); margin:0">✅ ${data.message}</p>
-                    <button onclick="clearUploadStatus('stu')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">✕</button>
-                </div>`;
-            loadUploadHistory('students', 'stuHistoryContainer');
-            if (data.errors.length) {
-                resultBox.innerHTML += `<details style="margin-top:0.5rem"><summary>View ${data.errors.length} skipped rows</summary><pre>${data.errors.join('\n')}</pre></details>`;
-            }
+            progressBar.style.width = '100%';
+            percentLbl.textContent = '100%';
+            status.textContent = '✅ Finalizing...';
+            
+            setTimeout(() => {
+                status.textContent = 'Upload Complete!';
+                resultBox.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <p style="color: var(--success); margin:0">✅ ${data.message}</p>
+                        <button onclick="clearUploadStatus('stu')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">✕</button>
+                    </div>`;
+                resultBox.classList.remove('hidden');
+                loadUploadHistory('students', 'stuHistoryContainer');
+            }, 500);
         } else {
             status.textContent = 'Upload Failed';
             resultBox.innerHTML = `
@@ -473,10 +500,12 @@ async function handleStudentUpload() {
                     <p style="color: var(--danger); margin:0">❌ ${data.message}</p>
                     <button onclick="clearUploadStatus('stu')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">✕</button>
                 </div>`;
+            resultBox.classList.remove('hidden');
         }
-        resultBox.classList.remove('hidden');
     } catch (e) {
         status.textContent = 'Network Error';
+    } finally {
+        fileInput.value = '';
     }
 }
 
@@ -518,32 +547,39 @@ async function handleResultUpload() {
     const progressWrap = document.getElementById('resUploadProgress');
     const progressBar = document.getElementById('resProgressBar');
     const statusText = document.getElementById('resUploadStatus');
+    const percentLbl = document.getElementById('resUploadPercent');
     const resultDiv = document.getElementById('resUploadResult');
 
     try {
         progressWrap.classList.remove('hidden');
         resultDiv.classList.add('hidden');
-        progressBar.style.width = '30%';
-        statusText.textContent = 'Uploading...';
+        progressBar.style.width = '0%';
+        percentLbl.textContent = '0%';
+        statusText.textContent = '⏳ Initializing Upload...';
 
         const res = await fetch('/api/admin/upload-results', {
             method: 'POST',
             body: formData
         });
         
-        progressBar.style.width = '100%';
         const data = await res.json();
         
         if (data.success) {
-            statusText.textContent = 'Processing Complete!';
-            resultDiv.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <p style="color:green; margin:0">✅ ${data.message}<br/>${data.details}</p>
-                    <button onclick="clearUploadStatus('res')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">✕</button>
-                </div>`;
-            resultDiv.classList.remove('hidden');
-            loadStats();
-            loadUploadHistory('results', 'resHistoryContainer');
+            progressBar.style.width = '100%';
+            percentLbl.textContent = '100%';
+            statusText.textContent = '✅ Finalizing...';
+
+            setTimeout(() => {
+                statusText.textContent = 'Processing Complete!';
+                resultDiv.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <p style="color:green; margin:0">✅ ${data.message}<br/>${data.details}</p>
+                        <button onclick="clearUploadStatus('res')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">✕</button>
+                    </div>`;
+                resultDiv.classList.remove('hidden');
+                loadStats();
+                loadUploadHistory('results', 'resHistoryContainer');
+            }, 500);
         } else {
             statusText.textContent = 'Upload Failed';
             resultDiv.innerHTML = `
@@ -558,6 +594,14 @@ async function handleResultUpload() {
     } finally {
         fileInput.value = '';
     }
+}
+
+function clearUploadStatus(prefix) {
+    document.getElementById(`${prefix}UploadProgress`).classList.add('hidden');
+    document.getElementById(`${prefix}UploadResult`).classList.add('hidden');
+    document.getElementById(`${prefix}UploadResult`).innerHTML = '';
+    document.getElementById(`${prefix}ProgressBar`).style.width = '0%';
+    document.getElementById(`${prefix}UploadPercent`).textContent = '0%';
 }
 
 // Manual Add Student

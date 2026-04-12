@@ -128,6 +128,13 @@ router.post('/upload-students', isAdmin, upload.single('file'), async (req, res)
       await Student.bulkWrite(bulkOps);
     }
 
+    req.app.get('io').emit('upload_progress', { 
+        type: 'Students',
+        processed, 
+        total: processed,
+        percent: 100
+    });
+
     await UploadHistory.findByIdAndUpdate(history._id, { recordsCount: processed, status: 'Success' });
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     
@@ -328,6 +335,16 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
           await newStudent.save();
         }
         created++;
+        
+        // 🚀 Live Progress Update (Every 10 records to avoid spam)
+        if (created % 10 === 0 || created === Object.keys(grouped).length) {
+            req.app.get('io').emit('upload_progress', { 
+                type: 'Results',
+                processed: created, 
+                total: Object.keys(grouped).length,
+                percent: Math.round((created / Object.keys(grouped).length) * 100)
+            });
+        }
       } catch (e) {
         errors.push(`Error for record ${key}: ${e.message}`);
       }

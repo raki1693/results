@@ -306,9 +306,14 @@
             <input type="file" id="stuFile" accept=".xlsx,.xls" style="display:none" onchange="handleStudentUpload()"/>
             <button class="btn-browse" onclick="document.getElementById('stuFile').click()">Browse File</button>
           </div>
-          <div id="stuUploadProgress" class="hidden">
-            <div class="progress-bar-wrap"><div class="progress-bar" id="stuProgressBar"></div></div>
-            <p id="stuUploadStatus">Uploading…</p>
+          <div id="stuUploadProgress" class="hidden" style="margin-top: 2rem; padding: 1.5rem; background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 16px;">
+            <div style="display:flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                <span id="stuUploadStatus" style="font-weight: 700; color: var(--secondary); font-size: 0.9rem;">⏳ Initializing...</span>
+                <span id="stuUploadPercent" style="font-weight: 800; color: var(--primary);">0%</span>
+            </div>
+            <div class="progress-bar-wrap" style="margin: 0;">
+                <div class="progress-bar" id="stuProgressBar" style="width: 0%; height: 12px; transition: width 0.4s ease;"></div>
+            </div>
           </div>
         <div id="stuUploadResult" class="upload-result hidden"></div>
         </div>
@@ -394,9 +399,14 @@
             <input type="file" id="resFile" accept=".xlsx,.xls" style="display:none" onchange="handleResultUpload()"/>
             <button class="btn-browse" onclick="document.getElementById('resFile').click()">Browse File</button>
           </div>
-          <div id="resUploadProgress" class="hidden">
-            <div class="progress-bar-wrap"><div class="progress-bar" id="resProgressBar"></div></div>
-            <p id="resUploadStatus">Uploading…</p>
+          <div id="resUploadProgress" class="hidden" style="margin-top: 2rem; padding: 1.5rem; background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 16px;">
+            <div style="display:flex; justify-content: space-between; margin-bottom: 0.75rem;">
+                <span id="resUploadStatus" style="font-weight: 700; color: var(--secondary); font-size: 0.9rem;">⏳ Initializing...</span>
+                <span id="resUploadPercent" style="font-weight: 800; color: var(--primary);">0%</span>
+            </div>
+            <div class="progress-bar-wrap" style="margin: 0;">
+                <div class="progress-bar" id="resProgressBar" style="width: 0%; height: 12px; transition: width 0.4s ease;"></div>
+            </div>
           </div>
           <div id="resUploadResult" class="upload-result hidden"></div>
         </div>
