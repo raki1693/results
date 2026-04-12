@@ -130,8 +130,16 @@ router.get('/data/search/:htno', async (req, res) => {
         
         files.forEach(file => {
             const match = file.excelData.find(row => {
-                const val = (row['Htno'] || row['HTNO'] || row['HallTicketNo'] || row['Admissionno'] || row['Roll Number'] || row['RollNo'] || '');
-                return String(val).trim().toUpperCase() === htno;
+                // 1. Try common column names first for precision
+                const commonHeaders = ['Htno', 'HTNO', 'HallTicketNo', 'Hall Ticket', 'Admissionno', 'Roll Number', 'RollNo', 'Roll No'];
+                for (const h of commonHeaders) {
+                    if (row[h] && String(row[h]).trim().toUpperCase() === htno) return true;
+                }
+
+                // 2. Fallback: Search EVERY column value in the row (Universal Search)
+                return Object.values(row).some(val => 
+                    val && String(val).trim().toUpperCase() === htno
+                );
             });
             
             if (match) {
