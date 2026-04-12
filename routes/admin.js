@@ -216,7 +216,10 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
               maxMarks: max,
               finalPassedName: total >= (max * 0.4) ? 'Pass' : 'Fail',
               status: total >= (max * 0.4) ? 'Pass' : 'Fail',
-              // Metadata for Rank Card
+              // Metadata for Rank Card & Individual Display
+              descriptiveMarks: desc,
+              assignmentMarks: assn,
+              objectiveMarks: obj,
               description: `Desc: ${desc} | Assn: ${assn} | Obj: ${obj}`,
               credits: 0 // Typically internal doesn't carry independent credits
             });

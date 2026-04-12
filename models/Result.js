@@ -12,7 +12,11 @@ const subjectSchema = new mongoose.Schema({
   gradePoints:     { type: Number, default: 0 },
   credits:         { type: Number, default: 3 },
   finalPassedName: { type: String, default: '' },      // exact value from Excel
-  status:          { type: String, enum: ['Pass', 'Fail', 'Absent', 'Withheld'], default: 'Fail' }
+  status:          { type: String, enum: ['Pass', 'Fail', 'Absent', 'Withheld'], default: 'Fail' },
+  // 🛰️ Mid-term Specific Metrics
+  descriptiveMarks: { type: Number, default: 0 },
+  assignmentMarks:  { type: Number, default: 0 },
+  objectiveMarks:   { type: Number, default: 0 }
 });
 
 const resultSchema = new mongoose.Schema({
