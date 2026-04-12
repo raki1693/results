@@ -146,7 +146,8 @@ if (pinForm) {
         const errorEl = document.getElementById('adminPinError');
         const attemptEl = document.getElementById('pinAttempts');
 
-        if (pin === CORRECT_PIN) {
+        // Check against the dynamically fetched PIN
+        if (pin === (pendingAdminData.securityPin || "965216")) {
             currentAdmin = pendingAdminData;
             showAdminDashboard();
             
@@ -189,7 +190,8 @@ if (unlockForm) {
         const answer = document.getElementById('unlockAnswer').value.trim();
         const errorEl = document.getElementById('adminUnlockError');
 
-        if (answer.toLowerCase() === UNLOCK_ANSWER.toLowerCase()) {
+        // Check against the dynamically fetched Nickname
+        if (answer.toLowerCase() === (pendingAdminData.securityNickname || "Junnu").toLowerCase()) {
             alert("Account Unlocked! Try signing in again.");
             pinAttempts = 5;
             document.getElementById('pinAttempts').textContent = "5 attempts remaining";
@@ -201,7 +203,7 @@ if (unlockForm) {
             document.getElementById('adminUnlockForm').classList.add('hidden');
             document.getElementById('adminLoginForm').classList.remove('hidden');
         } else {
-            errorEl.textContent = "Incorrect nickname!";
+            errorEl.textContent = "Incorrect answer!";
             errorEl.classList.remove('hidden');
         }
     };
@@ -616,6 +618,8 @@ function adminShowSection(id, btn) {
     }
     if (id.includes('Profile')) {
         document.getElementById('admUsername').value = currentAdmin.username;
+        document.getElementById('admPin').value = currentAdmin.securityPin || '';
+        document.getElementById('admNickname').value = currentAdmin.securityNickname || '';
         document.getElementById('admProfileMsg').className = 'hidden';
     }
 
@@ -719,6 +723,8 @@ async function handleAdminProfileUpdate(e) {
     const username = usernameEl.value.trim();
     const oldPassword = oldPasswordEl ? oldPasswordEl.value : '';
     const newPassword = newPasswordEl ? newPasswordEl.value : '';
+    const securityPin = document.getElementById('admPin').value.trim();
+    const securityNickname = document.getElementById('admNickname').value.trim();
 
     if (newPassword && !oldPassword) {
         msgEl.textContent = "Current password is required to change password.";
@@ -736,7 +742,7 @@ async function handleAdminProfileUpdate(e) {
         const res = await fetch('/api/auth/admin/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, oldPassword, newPassword })
+            body: JSON.stringify({ username, oldPassword, newPassword, securityPin, securityNickname })
         });
         const data = await res.json();
 

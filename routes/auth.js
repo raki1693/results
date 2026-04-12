@@ -130,7 +130,9 @@ router.post('/admin/login', async (req, res) => {
       id: admin._id,
       username: admin.username,
       name: admin.name,
-      role: admin.role
+      role: admin.role,
+      securityPin: admin.securityPin,
+      securityNickname: admin.securityNickname
     };
     req.session.save((err) => {
       if (err) return res.status(500).json({ success: false, message: 'Session save failed' });
@@ -188,20 +190,29 @@ router.post('/admin/update-profile', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
 
-    const { username, oldPassword, newPassword } = req.body;
+    const { username, oldPassword, newPassword, securityPin, securityNickname } = req.body;
     const admin = await Admin.findById(req.session.admin.id);
     if (!admin) {
       return res.status(404).json({ success: false, message: 'Admin not found' });
     }
 
     if (username) {
-      // Check if username is already taken by another admin
       const existing = await Admin.findOne({ username, _id: { $ne: admin._id } });
       if (existing) {
         return res.status(400).json({ success: false, message: 'Username is already taken' });
       }
       admin.username = username;
-      req.session.admin.username = username; // Update session
+      req.session.admin.username = username;
+    }
+
+    if (securityPin) {
+      admin.securityPin = securityPin;
+      req.session.admin.securityPin = securityPin;
+    }
+
+    if (securityNickname) {
+      admin.securityNickname = securityNickname;
+      req.session.admin.securityNickname = securityNickname;
     }
 
     if (newPassword) {
@@ -216,6 +227,7 @@ router.post('/admin/update-profile', async (req, res) => {
     }
 
     await admin.save();
+    req.session.save(); 
     res.json({ success: true, message: 'Profile updated successfully!', admin: req.session.admin });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to update profile: ' + err.message });

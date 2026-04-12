@@ -7,6 +7,8 @@ const adminSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   role: { type: String, default: 'admin' },
+  securityPin: { type: String, default: '965216' },
+  securityNickname: { type: String, default: 'Junnu' },
   createdAt: { type: Date, default: Date.now }
 });
 
