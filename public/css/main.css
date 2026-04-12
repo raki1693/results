@@ -1292,3 +1292,54 @@ select {
     font-size: 0.85rem;
     font-weight: 600;
 }
+/* ══════════════ 🛡️ HARDENED SECURITY SHIELD ══════════════ */
+
+/* 1. 🚫 DISABLE TEXT SELECTION (No Copy-Paste) */
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* 2. 🖨️ PRINT PROTECTION (Blackout everything on print) */
+@media print {
+    body { 
+        display: none !important; 
+    }
+    html::after {
+        content: "⚠️ Data Protection Active: Printing is strictly prohibited.";
+        display: block;
+        padding: 50px;
+        text-align: center;
+        font-size: 24px;
+        font-family: 'Inter', sans-serif;
+        color: #ef4444;
+    }
+}
+
+/* 3. 🚨 DEVTOOLS BLUR EFFECT (Triggered by security.js) */
+body.devtools-open {
+    filter: blur(25px) grayscale(100%);
+    pointer-events: none;
+    overflow: hidden;
+}
+
+body.devtools-open::after {
+    content: "🔒 Security Alert: Please Close Developer Tools to Access Portal";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #0f172a;
+    color: white;
+    padding: 2rem 3rem;
+    border-radius: 24px;
+    z-index: 9999999;
+    font-weight: 800;
+    font-size: 1.25rem;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    text-align: center;
+    width: 80%;
+    max-width: 500px;
+}
