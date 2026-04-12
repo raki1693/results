@@ -671,14 +671,20 @@ async function loadUploadHistory(type, containerId) {
                     <tbody>
                         ${history.map(h => {
                             const cat = (h.semester || h.examType)
-                                ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#eff6ff;border:1px solid #93c5fd;border-radius:20px;padding:3px 10px;font-size:0.75rem;font-weight:700;color:#1d4ed8;white-space:nowrap">📚 Sem ${formatSem(h.semester) || '?'} &nbsp;·&nbsp; ${h.examType || '?'}</span>`
+                                ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#eff6ff;border:1px solid #93c5fd;border-radius:20px;padding:3px 10px;font-size:0.75rem;font-weight:700;color:#1d4ed8;white-space:nowrap">📚 Sem ${formatSem(h.semester) || '?'} &nbsp;·&nbsp; ${h.examType || '?'}${h.examSession ? ` (${h.examSession})` : ''}</span>`
                                 : `<span style="color:#94a3b8;font-size:0.8rem">—</span>`;
                             return `
                             <tr>
                                 <td>${new Date(h.timestamp).toLocaleString()}</td>
                                 <td style="color:var(--primary)">${h.filename}</td>
                                 ${type === 'results' ? `<td>${cat}</td>` : ''}
-                                <td><b>${h.recordsCount}</b></td>
+                                <td>
+                                    <div style="font-size:0.85rem">
+                                        <div>✅ Processed: <b>${h.recordsCount}</b></div>
+                                        <div style="font-size:0.7rem; color:grey">📄 Excel Rows: ${h.totalRows || h.recordsCount}</div>
+                                        ${h.failedCount > 0 ? `<div style="font-size:0.7rem; color:var(--danger)">❌ Failed: ${h.failedCount}</div>` : ''}
+                                    </div>
+                                </td>
                                 <td>${h.uploadedBy}</td>
                                 <td>
                                     <div style="display:flex;gap:5px">

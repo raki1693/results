@@ -161,7 +161,8 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
     });
     await history.save();
 
-    let created = 0, errors = [];
+    let created = 0, failedRows = 0;
+    let errors = [];
     const grouped = {};
     const parseNum = (val) => {
       if (typeof val === 'number') return val;
@@ -177,7 +178,10 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
       const examSession  = req.body.examSession || String(findVal(row, ['Exam Session', 'Session', 'MonthYear']) || '').trim();
       const academicYear = String(findVal(row, ['Ac year', 'Academic Year', 'AY']) || '2023-24').trim();
       
-      if (!rollNumber) continue;
+      if (!rollNumber) {
+        failedRows++;
+        continue;
+      }
 
       const key = `${rollNumber}_${semester}_${examType}_${examSession}_${academicYear}`;
       
@@ -329,7 +333,12 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
       }
     }
 
-    await UploadHistory.findByIdAndUpdate(history._id, { recordsCount: created, status: 'Success' });
+    await UploadHistory.findByIdAndUpdate(history._id, { 
+        recordsCount: created, 
+        totalRows: data.length,
+        failedCount: failedRows,
+        status: 'Success' 
+    });
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
     req.app.get('io').emit('results_updated', { message: 'New results published!' });
 
