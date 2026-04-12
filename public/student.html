@@ -310,20 +310,23 @@
       <section id="section-data" class="content-section">
         <!-- 🔒 Access Controlled Content -->
         <div id="dataContentWrapper">
-          <div class="section-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
-            <div class="data-toolbar">
-              <div class="search-box-modern">
-                 <span class="search-prep">Htno:</span>
-                 <input type="text" id="dataSearchInput" placeholder="Enter Htno to search..." />
-                 <button class="btn-search-icon" onclick="handleHtnoSearch()">🔎</button>
-              </div>
-              <div class="data-toggle-group">
-                <button class="data-tab" id="tab-Students" onclick="switchDataTab('Students', this)">👨‍🎓 Students</button>
-                <button class="data-tab" id="tab-Faculty" onclick="switchDataTab('Faculty', this)">👨‍🏫 Faculty</button>
-              </div>
-              <div style="width: 250px;"></div> <!-- Spacer -->
+          <!-- 🏁 Streamlined Control Bar (Student Focused) -->
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 3rem; background: white; padding: 1.5rem; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;">
+                
+                <!-- 🔍 Universal Htno Search -->
+                <div class="search-master-wrap" style="flex: 1; min-width: 300px; position: relative;">
+                    <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; filter: grayscale(1);">🔍</span>
+                    <input type="text" id="dataSearchInput" placeholder="Enter Hall Ticket Number..." style="width: 100%; padding: 14px 14px 14px 45px; border-radius: 12px; border: 2px solid #e2e8f0; font-weight: 700; outline: none; transition: all 0.3s;" onkeyup="if(event.key==='Enter') handleHtnoSearch()">
+                    <button onclick="handleHtnoSearch()" class="search-submit-btn" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: var(--primary); color: white; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 800; cursor: pointer;">Search</button>
+                </div>
+
+                <!-- 📂 Quick Access Tabs -->
+                <div style="display: flex; gap: 10px;">
+                    <button class="data-tab active" id="tab-Students" onclick="showDataRole('Students')">
+                        <span style="margin-right: 8px;">🎓</span> Institutional Data
+                    </button>
+                </div>
             </div>
-          </div>
   
           <div class="data-layout-container">
             <!-- Side Vertical Nav (Only for Students) -->
