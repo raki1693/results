@@ -267,7 +267,7 @@ function renderOverview() {
     container.innerHTML = allResults.map(res => `
         <div class="sem-card" onclick="viewResultDetail('${res._id}')">
             <div class="sem-card-head">
-                <span class="sem-title">Semester ${formatSem(res.semester)}</span>
+                <span class="sem-title">Semester ${formatSem(res.semester)} &ndash; ${res.examType}${res.examSession ? ` (${res.examSession})` : ''}</span>
                 <span class="sem-badge ${res.result.toLowerCase()}">${res.result}</span>
             </div>
             <div class="sem-stats">
@@ -521,7 +521,9 @@ async function viewResultDetail(id) {
                         ['Branch', r.branch],
                         ['Academic Year', r.academicYear],
                         ['Semester', `Sem ${formatSem(r.semester)}`],
-                        ...(!isInternal ? [['SGPA', r.sgpa], ['CGPA', r.cgpa || '--']] : [['Percentage', r.percentage + '%']])
+                        ['SGPA', r.sgpa],
+                        ['CGPA', r.cgpa || '--'],
+                        ['Examination Year', r.examSession || '--']
                     ].map((item, i) => `
                         <div style="padding:0.85rem 1.1rem;background:${i%2===0?'#f8fafc':'#fff'};border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0">
                             <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px">${item[0]}</div>
