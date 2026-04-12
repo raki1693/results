@@ -299,7 +299,13 @@ router.post('/upload-results', isAdmin, upload.single('file'), async (req, res) 
         const resultStatus = hasFail ? 'Fail' : 'Pass';
 
         await Result.findOneAndUpdate(
-          { rollNumber: entry.rollNumber, semester: entry.semester, examType: entry.examType, academicYear: entry.academicYear },
+          { 
+            rollNumber: entry.rollNumber, 
+            semester: entry.semester, 
+            examType: entry.examType, 
+            examSession: entry.examSession, 
+            academicYear: entry.academicYear 
+          },
           { ...entry, uploadId: history._id, totalMarksObtained: totalObtained, totalMaxMarks: totalMax, percentage, sgpa, cgpa, result: resultStatus, uploadedBy: req.session.admin.username },
           { upsert: true, new: true }
         );
