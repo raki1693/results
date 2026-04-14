@@ -1432,14 +1432,15 @@ async function handleResultsUpload() {
     if (!file) { alert("Please select an Excel results file first."); return; }
 
     const sem = document.getElementById('uploadResSem').value;
-    const type = document.getElementById('uploadResType').value;
-    const sub = document.getElementById('uploadResSub') ? document.getElementById('uploadResSub').value : '';
+    const parentType = document.getElementById('uploadResType').value;
+    const subType = document.getElementById('uploadResSub') ? document.getElementById('uploadResSub').value : '';
     const session = document.getElementById('uploadResSession').value;
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('semester', sem);
-    formData.append('examType', type);
+    // ⚡ FIX: If it's internal, pass the subType (Mid-1/Mid-2) as the examType
+    formData.append('examType', subType || parentType);
     formData.append('examSession', session);
 
     try {
