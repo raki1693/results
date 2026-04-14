@@ -96,6 +96,7 @@
         <a href="#" class="nav-item" data-section="admChat" onclick="adminShowSection('admChat', this)"><span>💬</span> Support Chats</a>
         <a href="#" class="nav-item" onclick="adminShowSection('admUploadResults', this)"><span>📥</span> Upload Results</a>
         <a href="#" class="nav-item" onclick="adminShowSection('admAddStudent', this)"><span>➕</span> Add Student</a>
+        <a href="#" class="nav-item" onclick="adminShowSection('admKitsReports', this)"><span>🏛️</span> KITS Reports</a>
         <a href="#" class="nav-item" onclick="adminShowSection('admProfile', this)"><span>👤</span> My Profile</a>
       </nav>
       <button class="logout-btn" onclick="adminLogout()">🚪 Logout</button>
@@ -300,20 +301,34 @@
 
       <!-- ── Students List ── -->
       <section id="section-admStudents" class="content-section">
-        <div class="toolbar">
-          <input type="text" id="stuSearch" placeholder="🔍 Search by name or roll..." class="search-input" oninput="loadStudents()"/>
-          <select id="stuBranch" onchange="loadStudents()" class="filter-select">
-            <option value="">All Branches</option>
-            <option>CSE</option><option>CSE-AI</option><option>AIML</option><option>CSE-DS</option>
-            <option>ECE</option><option>EEE</option>
-            <option>MECH</option><option>CIVIL</option><option>IT</option>
-          </select>
-          <select id="stuYear" onchange="loadStudents()" class="filter-select">
-            <option value="">All Years</option>
-            <option value="1">Year 1</option><option value="2">Year 2</option>
-            <option value="3">Year 3</option><option value="4">Year 4</option>
-          </select>
+        <div class="toolbar" style="justify-content: space-between; align-items: center;">
+          <div style="display: flex; gap: 1rem;">
+            <input type="text" id="stuSearch" placeholder="🔍 Search by name or roll..." class="search-input" oninput="loadStudents()"/>
+            <select id="stuBranch" onchange="loadStudents()" class="filter-select">
+              <option value="">All Branches</option>
+              <option>CSE</option><option>CSE-AI</option><option>AIML</option><option>CSE-DS</option>
+              <option>ECE</option><option>EEE</option>
+              <option>MECH</option><option>CIVIL</option><option>IT</option>
+            </select>
+            <select id="stuYear" onchange="loadStudents()" class="filter-select">
+              <option value="">All Years</option>
+              <option value="1">Year 1</option><option value="2">Year 2</option>
+              <option value="3">Year 3</option><option value="4">Year 4</option>
+            </select>
+          </div>
+          
+          <!-- ⚡ Bulk Action Toolbar (Hidden by default) -->
+          <div id="bulkActionToolbar" class="bulk-toolbar hidden">
+            <span id="selectedCount">0 Selected</span>
+            <div class="bulk-btns">
+              <button class="bulk-btn activate" onclick="handleBulkStatus(true)">⚡ Activate</button>
+              <button class="bulk-btn deactivate" onclick="handleBulkStatus(false)">🚫 Deactivate</button>
+              <button class="bulk-btn lock" onclick="handleBulkData(false)">🔒 Lock Data</button>
+              <button class="bulk-btn unlock" onclick="handleBulkData(true)">🔓 Unlock Data</button>
+            </div>
+          </div>
         </div>
+
         <div class="section-card table-card">
           <div id="studentsTableWrap" class="table-wrap">
             <div class="loading-state">Loading students…</div>
@@ -541,6 +556,85 @@
             <div class="chat-input-area">
               <input type="text" id="adminChatInput" placeholder="Reply to student..." onkeypress="if(event.key==='Enter') sendAdminChat()"/>
               <button class="btn-primary" onclick="sendAdminChat()">Reply</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── KITS Portal Reports ── -->
+      <section id="section-admKitsReports" class="content-section">
+        <div class="premium-header">
+           <div class="header-main">
+              <div class="header-icon">🏛️</div>
+              <div>
+                 <h2>External Institutional Reports</h2>
+                 <p>Fetch real-time student information summaries directly from the KITS BeeS Portal.</p>
+              </div>
+           </div>
+        </div>
+
+        <div class="dashboard-grid glass-layout">
+          <div class="section-card premium-shadow">
+            <h3 class="card-title-modern"><span>📊</span> Report Parameters</h3>
+            <form id="kitsReportForm" class="modern-form" onsubmit="generateKitsReport(event)">
+              <div class="form-row-modern">
+                <div class="form-group-modern">
+                  <label>Batch</label>
+                  <select id="kitsBatch">
+                    <option>2022 - 2023</option>
+                    <option>2021 - 2022</option>
+                  </select>
+                </div>
+                <div class="form-group-modern">
+                  <label>Regulation</label>
+                  <select id="kitsRegulation">
+                    <option>R20</option>
+                    <option>R19</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row-modern">
+                <div class="form-group-modern">
+                  <label>Program</label>
+                  <select id="kitsProgram">
+                    <option>B.TECH</option>
+                    <option>M.TECH</option>
+                  </select>
+                </div>
+                <div class="form-group-modern">
+                  <label>Branch</label>
+                  <select id="kitsBranch">
+                    <option value="CSE-AI">CSE - ARTIFICIAL INTELLIGENCE</option>
+                    <option value="CSE">CSE</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row-modern">
+                <div class="form-group-modern">
+                  <label>Status</label>
+                  <select id="kitsStatus">
+                    <option>Active</option>
+                    <option>Inactive</option>
+                  </select>
+                </div>
+                <div class="form-group-modern">
+                  <label>Format</label>
+                  <select id="kitsFormat">
+                    <option>PDF</option>
+                    <option>Excel</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="btn-premium-action" id="kitsReportBtn">
+                <span class="btn-content">⚡ Generate KITS Report</span>
+              </button>
+            </form>
+          </div>
+
+          <div class="section-card premium-shadow" style="display: flex; flex-direction: column; min-height: 500px;">
+            <h3 class="card-title-modern"><span>📄</span> Report Preview</h3>
+            <div id="kitsReportPreview" style="flex: 1; border: 1px dashed var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #f8fafc;">
+              <p style="color: #64748b;">Generated report will appear here</p>
             </div>
           </div>
         </div>

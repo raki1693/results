@@ -276,6 +276,7 @@ async function loadStudents() {
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th class="chk-col"><input type="checkbox" id="selectAllStu" onchange="toggleSelectAll(this)"></th>
                             <th>Roll Number</th>
                             <th>Name</th>
                             <th>Branch</th>
@@ -307,6 +308,7 @@ async function loadStudents() {
                             
                             return `
                             <tr>
+                                <td class="chk-col"><input type="checkbox" class="stu-checkbox" value="${s._id}" onchange="updateBulkUI()"></td>
                                 <td><strong>${s.rollNumber}</strong></td>
                                 <td>${s.name}</td>
                                 <td>${s.branch}</td>
@@ -333,6 +335,7 @@ async function loadStudents() {
                 </table>
             `;
         }
+        updateBulkUI(); // Reset UI after load
     } catch (e) {
         wrap.innerHTML = `<p style="padding: 2rem; color: var(--danger)">Failed to load data.</p>`;
     }
@@ -390,6 +393,68 @@ async function deleteStudent(id) {
     const res = await fetch(`/api/admin/students/${id}`, { method: 'DELETE' });
     const data = await res.json();
     if (data.success) loadStudents();
+}
+
+// ⚡ BULK ACTION HANDLERS
+function toggleSelectAll(master) {
+    document.querySelectorAll('.stu-checkbox').forEach(chk => chk.checked = master.checked);
+    updateBulkUI();
+}
+
+function updateBulkUI() {
+    const selected = document.querySelectorAll('.stu-checkbox:checked');
+    const toolbar = document.getElementById('bulkActionToolbar');
+    const countLbl = document.getElementById('selectedCount');
+    
+    if (selected.length > 0) {
+        toolbar.classList.remove('hidden');
+        countLbl.textContent = `${selected.length} Selected`;
+    } else {
+        toolbar.classList.add('hidden');
+        if (document.getElementById('selectAllStu')) {
+            document.getElementById('selectAllStu').checked = false;
+        }
+    }
+}
+
+async function handleBulkStatus(active) {
+    const selected = Array.from(document.querySelectorAll('.stu-checkbox:checked')).map(c => c.value);
+    if (!selected.length) return;
+    
+    if (!confirm(`Switch ${selected.length} students to ${active ? 'ACTIVE' : 'INACTIVE'}?`)) return;
+
+    try {
+        const res = await fetch('/api/admin/bulk/students/status', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentIds: selected, active })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            loadStudents();
+        }
+    } catch (e) { alert("Bulk update failed."); }
+}
+
+async function handleBulkData(allowed) {
+    const selected = Array.from(document.querySelectorAll('.stu-checkbox:checked')).map(c => c.value);
+    if (!selected.length) return;
+    
+    if (!confirm(`${allowed ? 'UNLOCK' : 'LOCK'} data access for ${selected.length} students?`)) return;
+
+    try {
+        const res = await fetch('/api/admin/bulk/students/data-access', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentIds: selected, allowed })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            loadStudents();
+        }
+    } catch (e) { alert("Bulk update failed."); }
 }
 
 // Result Management
@@ -678,6 +743,54 @@ function adminShowSection(id, btn) {
     // Auto-close sidebar on mobile
     if (window.innerWidth <= 1024) {
         document.querySelector('.sidebar').classList.remove('active');
+    }
+}
+
+async function generateKitsReport(e) {
+    e.preventDefault();
+    const btn = document.getElementById('kitsReportBtn');
+    const preview = document.getElementById('kitsReportPreview');
+    
+    const payload = {
+        batch: document.getElementById('kitsBatch').value,
+        regulation: document.getElementById('kitsRegulation').value,
+        program: document.getElementById('kitsProgram').value,
+        branch: document.getElementById('kitsBranch').value,
+        status: document.getElementById('kitsStatus').value,
+        format: document.getElementById('kitsFormat').value
+    };
+
+    try {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-content">⏳ Fetching from KITS Portal...</span>';
+        preview.innerHTML = '<div class="spinner-small"></div><p style="margin-top:1rem">Connecting to external portal...</p>';
+
+        const res = await fetch('/api/admin/kits-reports', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch report');
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        if (payload.format === 'PDF') {
+            preview.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none; border-radius:12px;"></iframe>`;
+        } else {
+            preview.innerHTML = `
+                <div style="text-align:center">
+                    <p style="color:var(--success); font-weight:700">✅ Excel Report Generated!</p>
+                    <a href="${url}" download="KITS_Report.xlsx" class="btn-primary" style="display:inline-block; margin-top:1rem; padding:0.5rem 2rem; text-decoration:none">📥 Download Excel</a>
+                </div>
+            `;
+        }
+    } catch (err) {
+        preview.innerHTML = `<p style="color:var(--danger)">Error: ${err.message}</p>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="btn-content">⚡ Generate KITS Report</span>';
     }
 }
 

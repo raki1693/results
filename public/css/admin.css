@@ -474,3 +474,76 @@
 
 .mode-database .drop-illu { color: #10b981; }
 .mode-document .drop-illu { color: #6366f1; }
+
+/* ⚡ BULK ACTION UI ⚡ */
+.bulk-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(12px);
+    border-radius: 100px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    color: white;
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1001;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+#selectedCount {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #94a3b8;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    padding-right: 1.5rem;
+}
+
+.bulk-btns {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.bulk-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bulk-btn.activate { background: #10b981; color: white; }
+.bulk-btn.deactivate { background: #64748b; color: white; }
+.bulk-btn.lock { background: #ef4444; color: white; }
+.bulk-btn.unlock { background: #2563eb; color: white; }
+
+.bulk-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
+}
+
+.bulk-btn:active { transform: scale(0.98); }
+
+/* Custom Checkbox */
+.chk-col { width: 40px; text-align: center; }
+.stu-checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.bulk-toolbar.hidden {
+    display: none;
+}

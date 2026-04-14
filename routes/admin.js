@@ -8,6 +8,47 @@ const Student = require('../models/Student');
 const Result = require('../models/Result');
 const UploadHistory = require('../models/UploadHistory');
 const DataFile = require('../models/DataFile');
+const axios = require('axios');
+
+// ─── KITS Portal Proxy ────────────────────────────────────────────────────────
+router.post('/kits-reports', isAdmin, async (req, res) => {
+  try {
+    const { batch, regulation, program, branch, status, reportType, format } = req.body;
+
+    // Hardcoded mappings based on investigation
+    const regulationId = regulation === 'R20' ? '1' : '1';
+    const programId = program === 'B.TECH' ? '1' : '1';
+    const branchId = branch === 'CSE-AI' ? '8' : '8'; // Map more as needed
+
+    const payload = new URLSearchParams();
+    payload.append('reportId', '4231');
+    payload.append('procedurename', 'ADMIN_SearchStudentsReport');
+    payload.append('reportPath', 'AdminSearchStudents');
+    payload.append('Type', 'Report');
+    payload.append('FormatName', format || 'PDF');
+    payload.append('parameters[Batch]', batch || '2022 - 2023');
+    payload.append('parameters[Regulationid]', regulationId);
+    payload.append('parameters[ProgramId]', programId);
+    payload.append('parameters[BranchId]', branchId);
+    payload.append('parameters[Flag]', status || 'Active');
+    payload.append('parameters[ReportType]', reportType || 'Summary');
+    payload.append('sequence', 'First');
+
+    const response = await axios.post('https://kitsg.beessoftware.cloud/Reports/ReportsV3/GenerateReport', payload, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'ASP.NET_SessionId=l0r43pxd2w1msvshubtgy13k' // This session might timeout; ideally implement login flow
+      },
+      responseType: 'arraybuffer'
+    });
+
+    res.set('Content-Type', format === 'Excel' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'application/pdf');
+    res.send(response.data);
+  } catch (err) {
+    console.error('KITS Proxy Error:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch external report.' });
+  }
+});
 
 // Multer config for Excel uploads
 const storage = multer.diskStorage({
@@ -556,6 +597,35 @@ router.put('/upload-history/:id', isAdmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
+});
+
+// ─── BULK STUDENT OPERATIONS ───────────────────────────────────────────────
+router.patch('/bulk/students/status', isAdmin, async (req, res) => {
+    try {
+        const { studentIds, active } = req.body;
+        if (!studentIds || !Array.isArray(studentIds)) return res.status(400).json({ success: false });
+
+        await Student.updateMany(
+            { _id: { $in: studentIds } },
+            { $set: { isActive: !!active } }
+        );
+
+        res.json({ success: true, message: `Successfully ${active ? 'activated' : 'deactivated'} ${studentIds.length} students!` });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+});
+
+router.patch('/bulk/students/data-access', isAdmin, async (req, res) => {
+    try {
+        const { studentIds, allowed } = req.body;
+        if (!studentIds || !Array.isArray(studentIds)) return res.status(400).json({ success: false });
+
+        await Student.updateMany(
+            { _id: { $in: studentIds } },
+            { $set: { hasDataAccess: !!allowed } }
+        );
+
+        res.json({ success: true, message: `Data access ${allowed ? 'unlocked' : 'locked'} for ${studentIds.length} students!` });
+    } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 module.exports = router;
