@@ -1,6 +1,6 @@
 /**
- * 🛡️ KITS RESULT - HYBRID SECURITY SHIELD (v3.0)
- * Aggressive desktop blocking + Mobile compatibility.
+ * 🛡️ KITS RESULT - DEBUGGER-LOCK SHIELD (v4.0)
+ * Aggressive desktop blocking + Infinite Debugger Trap.
  */
 
 (function() {
@@ -26,8 +26,26 @@
         }
     });
 
-    // 3. 🚨 AGGRESSIVE DESKTOP BLOCKER
-    // If not mobile, we use the window-size sensor to visually blur the site immediately.
+    // 3. 🚨 INFINITE DEBUGGER TRAP (Console Blocker)
+    // This function will constantly pause the execution if DevTools are open.
+    const startTrap = () => {
+        function trap() {
+            try {
+                (function() {
+                    (function a() {
+                        debugger;
+                        a();
+                    }());
+                }());
+            } catch (e) {
+                setTimeout(trap, 100);
+            }
+        }
+        // Small delay to let the page load smoothly
+        setTimeout(trap, 1000);
+    };
+
+    // 4. 🚨 AGGRESSIVE VISUAL BLOCKER
     if (!isMobile) {
         const detectDevTools = () => {
             const widthThreshold = window.outerWidth - window.innerWidth > 160;
@@ -35,18 +53,21 @@
             
             if (widthThreshold || heightThreshold) {
                 document.body.classList.add('devtools-open');
+                startTrap(); // Engage the debugger trap if they try to bypass the blur
             } else {
                 document.body.classList.remove('devtools-open');
             }
         };
 
-        // Check constantly
         setInterval(detectDevTools, 500);
         window.addEventListener('resize', detectDevTools);
-        detectDevTools(); // Run immediately on load
+        detectDevTools();
+    } else {
+        // Even on mobile, we can run a milder version of the trap
+        startTrap();
     }
 
-    // 4. 🖨️ ANTI-PRINT TRIGGER
+    // 5. 🖨️ ANTI-PRINT TRIGGER
     window.onbeforeprint = function() {
         document.body.style.display = 'none';
     };
@@ -54,5 +75,5 @@
         document.body.style.display = 'block';
     };
 
-    console.log("%c🛡️ Hybrid Shield Active (v3.0)", "color: #4f46e5; font-size: 16px; font-weight: bold;");
+    console.log("%c🛡️ Debugger-Lock Active (v4.0)", "color: #ef4444; font-size: 16px; font-weight: bold;");
 })();
