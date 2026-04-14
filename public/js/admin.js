@@ -125,6 +125,62 @@ const CORRECT_PIN = "965216";
 const UNLOCK_ANSWER = "Junnu";
 let pendingAdminData = null;
 
+async function generateKitsReport(e) {
+    if (e) e.preventDefault();
+    console.log("Generating KITS Report...");
+    
+    const btn = document.getElementById('kitsReportBtn');
+    const preview = document.getElementById('kitsReportPreview');
+    
+    if (!btn || !preview) return;
+
+    const payload = {
+        batch: document.getElementById('kitsBatch').value,
+        regulation: document.getElementById('kitsRegulation').value,
+        program: document.getElementById('kitsProgram').value,
+        branch: document.getElementById('kitsBranch').value,
+        status: document.getElementById('kitsStatus').value,
+        format: document.getElementById('kitsFormat').value
+    };
+
+    try {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-content">⏳ Fetching...</span>';
+        preview.innerHTML = '<div class="spinner-small"></div><p style="margin-top:1rem">Connecting to KITS portal...</p>';
+
+        const res = await fetch('/api/admin/kits-reports', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.message || 'Server error while fetching report');
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        if (payload.format === 'PDF') {
+            preview.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none; border-radius:12px;"></iframe>`;
+        } else {
+            preview.innerHTML = `
+                <div style="text-align:center">
+                    <p style="color:var(--success); font-weight:700">✅ Excel Report Generated!</p>
+                    <a href="${url}" download="KITS_Report.xlsx" class="btn-primary" style="display:inline-block; margin-top:1rem; padding:0.5rem 2rem; text-decoration:none">📥 Download Excel</a>
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error("Report Error:", err);
+        preview.innerHTML = `<p style="color:var(--danger); text-align:center; padding: 2rem;">❌ Error: ${err.message}<br/><small>Check backend logs on Render.</small></p>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="btn-content">⚡ Generate KITS Report</span>';
+    }
+}
+
 // Admin Login - Step 1 (Authentication)
 document.getElementById('adminLoginForm').onsubmit = async (e) => {
     e.preventDefault();
@@ -746,53 +802,7 @@ function adminShowSection(id, btn) {
     }
 }
 
-async function generateKitsReport(e) {
-    e.preventDefault();
-    const btn = document.getElementById('kitsReportBtn');
-    const preview = document.getElementById('kitsReportPreview');
-    
-    const payload = {
-        batch: document.getElementById('kitsBatch').value,
-        regulation: document.getElementById('kitsRegulation').value,
-        program: document.getElementById('kitsProgram').value,
-        branch: document.getElementById('kitsBranch').value,
-        status: document.getElementById('kitsStatus').value,
-        format: document.getElementById('kitsFormat').value
-    };
 
-    try {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="btn-content">⏳ Fetching from KITS Portal...</span>';
-        preview.innerHTML = '<div class="spinner-small"></div><p style="margin-top:1rem">Connecting to external portal...</p>';
-
-        const res = await fetch('/api/admin/kits-reports', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch report');
-
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-
-        if (payload.format === 'PDF') {
-            preview.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none; border-radius:12px;"></iframe>`;
-        } else {
-            preview.innerHTML = `
-                <div style="text-align:center">
-                    <p style="color:var(--success); font-weight:700">✅ Excel Report Generated!</p>
-                    <a href="${url}" download="KITS_Report.xlsx" class="btn-primary" style="display:inline-block; margin-top:1rem; padding:0.5rem 2rem; text-decoration:none">📥 Download Excel</a>
-                </div>
-            `;
-        }
-    } catch (err) {
-        preview.innerHTML = `<p style="color:var(--danger)">Error: ${err.message}</p>`;
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="btn-content">⚡ Generate KITS Report</span>';
-    }
-}
 
 async function loadUploadHistory(type, containerId) {
     const container = document.getElementById(containerId);
