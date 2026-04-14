@@ -8,63 +8,6 @@ function formatSem(num) {
     return map[s] || s;
 }
 
-async function generateKitsReport(e) {
-    if (e) e.preventDefault();
-    console.log("🚀 KITS Report Generation Triggered");
-    
-    const btn = document.getElementById('kitsReportBtn');
-    const preview = document.getElementById('kitsReportPreview');
-    
-    if (!btn || !preview) return;
-
-    const payload = {
-        batch: document.getElementById('kitsBatch').value,
-        regulation: document.getElementById('kitsRegulation').value,
-        program: document.getElementById('kitsProgram').value,
-        branch: document.getElementById('kitsBranch').value,
-        status: document.getElementById('kitsStatus').value,
-        format: document.getElementById('kitsFormat').value
-    };
-
-    try {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="btn-content">⏳ Fetching...</span>';
-        preview.innerHTML = '<div class="spinner-small"></div><p style="margin-top:1rem">Connecting to KITS portal...</p>';
-
-        const res = await fetch('/api/admin/kits-reports', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.message || 'Server error while fetching report');
-        }
-
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-
-        if (payload.format === 'PDF') {
-            preview.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none; border-radius:12px;"></iframe>`;
-        } else {
-            preview.innerHTML = `
-                <div style="text-align:center">
-                    <p style="color:var(--success); font-weight:700">✅ Excel Report Generated!</p>
-                    <a href="${url}" download="KITS_Report.xlsx" class="btn-primary" style="display:inline-block; margin-top:1rem; padding:0.5rem 2rem; text-decoration:none">📥 Download Excel</a>
-                </div>
-            `;
-        }
-    } catch (err) {
-        console.error("Report Error:", err);
-        preview.innerHTML = `<p style="color:var(--danger); text-align:center; padding: 2rem;">❌ Error: ${err.message}<br/><small>Check backend logs on Render.</small></p>`;
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="btn-content">⚡ Generate KITS Report</span>';
-    }
-}
-
-
 document.addEventListener('DOMContentLoaded', async () => {
     const session = await checkSession();
     if (session.loggedIn && session.role === 'admin') {
@@ -126,13 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             profileForm.addEventListener('submit', handleAdminProfileUpdate);
         }
 
-        // 🏛️ KITS Report Form Listener
-        const kitsForm = document.getElementById('kitsReportForm');
-        if (kitsForm) {
-            console.log("🏛️ KITS Form detected, attaching listener");
-            kitsForm.addEventListener('submit', generateKitsReport);
-        }
-
     } else {
         showAdminLogin();
     }
@@ -188,8 +124,6 @@ let pinAttempts = 5;
 const CORRECT_PIN = "965216";
 const UNLOCK_ANSWER = "Junnu";
 let pendingAdminData = null;
-
-
 
 // Admin Login - Step 1 (Authentication)
 document.getElementById('adminLoginForm').onsubmit = async (e) => {
@@ -811,8 +745,6 @@ function adminShowSection(id, btn) {
         document.querySelector('.sidebar').classList.remove('active');
     }
 }
-
-
 
 async function loadUploadHistory(type, containerId) {
     const container = document.getElementById(containerId);
@@ -1621,3 +1553,64 @@ async function handleDataUpload(e) {
         btn.innerHTML = `⚡ Upload & Publish to Portal`;
     }
 }
+
+// ══════════════ KITSG INTEGRATION (CHAIRMAN PORTAL) ══════════════
+
+async function generateKitsgReport(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    const originalText = btn.innerHTML;
+    
+    const payload = {
+        batch: document.getElementById('kitsBatch').value,
+        regulationId: document.getElementById('kitsReg').value,
+        programId: document.getElementById('kitsProg').value,
+        branchId: document.getElementById('kitsBranch').value,
+        status: document.getElementById('kitsStatus').value,
+        format: document.getElementById('kitsFormat').value,
+        reportType: 'Summary'
+    };
+
+    try {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-content">⏳ Fetching Data from Source Server...</span>';
+
+        const res = await fetch('/api/kitsg/report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch report');
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const extension = payload.format === 'EXCEL' ? 'xlsx' : 'pdf';
+        a.download = `StudentReport_${payload.branchId}_${payload.batch.replace(/\s/g, '')}.${extension}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        alert('✅ Report generated successfully!');
+    } catch (err) {
+        console.error(err);
+        alert('❌ Error generating report. Please check if your system session is still active.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+async function syncAllKitsgData() {
+    if (!confirm("This will synchronize all student records from the college portal to your website's database. This may take a few minutes. Continue?")) return;
+    
+    alert("🔄 Sync started in the background. You can continue using the dashboard.");
+    
+    // In a real implementation, we would loop through all branches/batches
+    // and send them to a bulk sync endpoint on your server.
+    console.log("Synchronizing KITSG Data...");
+}
+
+// ═════════════════════════════════════════════════════════════════

@@ -4,7 +4,6 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const cors = require('cors');
 const path = require('path');
-const axios = require('axios');
 const http = require('http');
 const socketIo = require('socket.io');
 
@@ -77,11 +76,13 @@ const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const resultsRoutes = require('./routes/results');
 const chatRoutes = require('./routes/chat');
+const kitsgRoutes = require('./routes/kitsg');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/results', resultsRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/kitsg', kitsgRoutes);
 
 // Serve frontend pages
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
