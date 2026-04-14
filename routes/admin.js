@@ -10,6 +10,13 @@ const UploadHistory = require('../models/UploadHistory');
 const DataFile = require('../models/DataFile');
 const axios = require('axios');
 
+// ─── Admin Auth Middleware ────────────────────────────────────────────────────
+const isAdmin = (req, res, next) => {
+  if (!req.session.admin)
+    return res.status(401).json({ success: false, message: 'Unauthorized. Admin login required.' });
+  next();
+};
+
 // ─── KITS Portal Proxy ────────────────────────────────────────────────────────
 router.post('/kits-reports', isAdmin, async (req, res) => {
   try {
@@ -75,13 +82,6 @@ const dataUpload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
-
-// ─── Admin Auth Middleware ────────────────────────────────────────────────────
-const isAdmin = (req, res, next) => {
-  if (!req.session.admin)
-    return res.status(401).json({ success: false, message: 'Unauthorized. Admin login required.' });
-  next();
-};
 
 // ─── Helper: Calculate Grade ──────────────────────────────────────────────────
 const calculateGrade = (percentage) => {
